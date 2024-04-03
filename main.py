@@ -1,3 +1,4 @@
+# Bibliotecas externas
 import speech_recognition as sr
 import pyttsx3
 import os
@@ -5,17 +6,30 @@ from datetime import date
 import datetime
 import requests
 
-nome = "Tyago"
+
+
+# Variáveis definidas
 hora = datetime.datetime.now()
 data = date.today()
 ds = date.weekday(data)
 dias = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
 meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 APIclima = "3fa1b2a2653d17190c4a1f574d8a259a"
+engine = pyttsx3.init()
 
-ativo = False  # Variável para controlar se o sistema de voz está ativo
-ultima_fala = datetime.datetime.now()
 
+
+# Funções
+def configInicial():
+    AylaDiz("Olá! vamos começar? Primeiro, qual é o seu nome?")
+
+def AylaDiz(comando):
+    engine.say(comando)
+    engine.runAndWait()
+
+
+
+# Código executado por voz
 while True:
     mic = sr.Recognizer()
 
@@ -31,29 +45,26 @@ while True:
             # Verificar se houve uma fala antes de tentar interpretar a frase
                 frase = mic.recognize_google(audio, language='pt-BR').lower()
 
-                # Verificar se a palavra de ativação foi dita e o sistema não estava ativo
-                if ('ayla' in frase or 'aylla' in frase or 'aila' in frase or 'ailla' in frase) and not ativo:
-                    print("Sistema ativado.")
-                    print("Fale:")
-                    print(frase)
-                    ativo = True
-
-
-                # Se o sistema estiver ativado, execute as ações
-                if ativo:
+                # Verificar se a palavra de ativação foi dita
+                if 'ayla' in frase or 'aylla' in frase or 'aila' in frase or 'ailla' in frase:
 
                     # desligar / reiniciar o computador
-                    if ('desligue' in frase) and 'computador' in frase:
+                    if frase == "desligue o computador":
                         engine.say("desligando o computador")
                         engine.runAndWait()
-                        # os.system("shutdown -s -t 1")
+                        #os.system("shutdown -s -t 1")
                         ativo = False
 
-                    elif ('reinicie' in frase) and 'computador' in frase:
+                    elif frase == "reinicie o computador":
                         engine.say("reiniciando o computador")
                         engine.runAndWait()
-                        # os.system("shutdown -r -t 1")
+                        #os.system("shutdown -r -t 1")
                         ativo = False
+
+                    elif "configuração inicial" in frase:
+                        print("configuração inicial")
+                        AylaDiz(frase)
+                        configInicial()
 
                     # abrir programas
                     elif ('abrir' in frase or 'abra' in frase) and ('opera' in frase or 'ópera' in frase):
@@ -86,13 +97,12 @@ while True:
                         engine.runAndWait()
                         ativo = False
 
-                    elif 'que horas são' in frase:
+                    elif any(keyword in frase for keyword in ['que horas são', 'quais as horas', 'qual o horário', 'qual horario']):
                         if hora.minute == 0:
                             engine.say(f"Agora são {hora.hour} horas em ponto.")
                             engine.runAndWait()
                         else:
                             engine.say(f"Agora são {hora.hour} horas e {hora.minute} minutos.")
-                            engine.runAndWait()
                         ativo = False
 
                     elif any(keyword in frase for keyword in ['temperatura', 'clima']):
@@ -114,6 +124,8 @@ while True:
                             engine.say(f"A temperatura em Brasília é de {round(temp, 0)} graus, e o clima é {descr}")
                             engine.runAndWait()
                             ativo = False
+                else:
+                    print("comando recebido sem a palavra de ativação.")
 
         except sr.UnknownValueError:
             print("Não entendi. Dê o comando novamente:")
