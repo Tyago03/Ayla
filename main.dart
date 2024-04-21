@@ -610,19 +610,23 @@ class _PerguntaAppState extends State<PerguntaApp> {
 
     // Aba Perfil
     Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.transparent,
-              border: Border.all(color: Colors.white, width: 4),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 120, // Aumentado de 100 para 120
+          height: 120, // Aumentado de 100 para 120
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.transparent,
+            border: Border.all(
+              color: Colors.white,
+              width: 4,
             ),
-            child: const Icon(Icons.person, size: 80, color: Colors.white), // Tamanho do ícone aumentado
           ),
-          TextButton(
+          child: const Icon(Icons.person,
+              size: 80, color: Colors.white), // Tamanho do ícone aumentado
+        ),
+        TextButton(
             onPressed: () {
                 //route
             },
@@ -632,23 +636,64 @@ class _PerguntaAppState extends State<PerguntaApp> {
             ),
             child: Text('Sair', style: TextStyle(color: Color(0xFF0DAD9E), fontSize: 16)),
           ),
-          const SizedBox(height: 30),
-          Text('Selecione a opção desejada:', style: GoogleFonts.josefinSans(fontSize: 22, color: Colors.white)),
-          const SizedBox(height: 30),
-          OutlinedButton(
-            onPressed: () {},
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: Color(0xFF0E1315), // Cor de fundo cinza escuro
-              side: BorderSide(color: Colors.white, width: 2),
-              textStyle: GoogleFonts.josefinSans(fontSize: 20),
-              minimumSize: Size(240, 48),
-            ),
-            child: const Text('Editar foto de perfil'),
+        const SizedBox(height: 25),
+        Text(
+          'Selecione a opção desejada:',
+          style: GoogleFonts.josefinSans(
+            fontSize: 22,
+            color: Colors.white,
           ),
-          // Continue adicionando outros botões de edição como "Editar nome", etc.
-        ],
-      ),
+        ),
+        const SizedBox(height: 30),
+        OutlinedButton(
+          onPressed: () {},
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: Color(0xFF0E1315), // Cor de fundo cinza escuro
+            side: BorderSide(color: Colors.white, width: 2),
+            textStyle: GoogleFonts.josefinSans(fontSize: 20),
+            minimumSize: Size(240, 48),
+          ),
+          child: const Text('Editar foto de perfil'),
+        ),
+        const SizedBox(height: 20),
+        OutlinedButton(
+          onPressed: () {},
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: Color(0xFF0E1315), // Cor de fundo cinza escuro
+            side: BorderSide(color: Colors.white, width: 2),
+            textStyle: GoogleFonts.josefinSans(fontSize: 20),
+            minimumSize: Size(240, 48),
+          ),
+          child: const Text('Editar nome'),
+        ),
+        const SizedBox(height: 20),
+        OutlinedButton(
+          onPressed: () {},
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: Color(0xFF0E1315), // Cor de fundo cinza escuro
+            side: BorderSide(color: Colors.white, width: 2),
+            textStyle: GoogleFonts.josefinSans(fontSize: 20),
+            minimumSize: Size(240, 48),
+          ),
+          child: const Text('Editar e-mail'),
+        ),
+        const SizedBox(height: 20),
+        OutlinedButton(
+          onPressed: () {},
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: Color(0xFF0E1315), // Cor de fundo cinza escuro
+            side: BorderSide(color: Colors.white, width: 2),
+            textStyle: GoogleFonts.josefinSans(fontSize: 20),
+            minimumSize: Size(240, 48),
+          ),
+          child: const Text('Editar senha'),
+        ),
+      ],
+    ),
     //Aba Configurações
     Column(
       mainAxisSize: MainAxisSize.min,
