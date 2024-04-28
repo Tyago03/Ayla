@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 //Cores principais usadas:
 // Plano de fundo: #0E1315
@@ -268,6 +269,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 );
                 if (source != null) {
                   await _pickImage(source);
+                  Navigator.pop(context);
                 }
               },
               child: _buildImage(), // Mostra a imagem ou o ícone padrão
@@ -658,10 +660,12 @@ class _PerguntaAppState extends State<PerguntaApp> {
         ),
         const SizedBox(height: 20),
         OutlinedButton(
-          // Botão para a Sub-Aba Editar Localização
+          // Botão para a Guia Editar Localização
           onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => _buildEditarLocalizacao()));
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => pegarLocalizacao()),
+            );
           },
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.white,
@@ -813,33 +817,6 @@ class _PerguntaAppState extends State<PerguntaApp> {
     );
   }
 
-  //Sub-Aba Editar Localização
-  Widget _buildEditarLocalizacao() {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF0E1315),
-            border: Border(
-              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
-            ),
-          ),
-          child: AppBar(
-            title: Text(
-              'Editar Alarmes',
-              style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
-            ),
-            backgroundColor: Colors.transparent,
-            centerTitle: true,
-            elevation: 0,
-          ),
-        ),
-      ),
-      backgroundColor: const Color(0xFF0E1315),
-    );
-  }
-
   // Sistema para mudar de Aba
   Widget _getCurrentPage() {
     switch (_currentIndex) {
@@ -863,8 +840,6 @@ class _PerguntaAppState extends State<PerguntaApp> {
         return _buildAlterarVozAyla();
       case 9:
         return _buildEditarAlarmes();
-      case 10:
-        return _buildEditarLocalizacao();
       default:
         return _buildInicioPage();
     }
@@ -942,6 +917,82 @@ class _PerguntaAppState extends State<PerguntaApp> {
         ),
       ),
     );
+  }
+}
+
+// Guia Localização
+class pegarLocalizacao extends StatefulWidget {
+  @override
+  _pegarLocalizacaoState createState() => _pegarLocalizacaoState();
+}
+
+class _pegarLocalizacaoState extends State<pegarLocalizacao> {
+  late GoogleMapController myMapController;
+  final Set<Marker> _markers = new Set();
+  static const LatLng _mainLocation = const LatLng(25.69893, 32.6421);
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        home: Scaffold(
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          //Top Bar
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFF0E1315),
+              border: Border(
+                bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
+              ),
+            ),
+            child: AppBar(
+              title: Text(
+                'Editar Localização',
+                style:
+                    GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
+              ),
+              backgroundColor: Colors.transparent,
+              centerTitle: true,
+              elevation: 0,
+            ),
+          ),
+        ),
+            body: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Expanded(
+                  child: GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: _mainLocation,
+                      zoom: 10.0,
+                    ),
+                    markers: this.myMarker(),
+                    mapType: MapType.normal,
+                    onMapCreated: (controller) {
+                      setState(() {
+                        myMapController = controller;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            )));
+  }
+
+  Set<Marker> myMarker() {
+    setState(() {
+      _markers.add(Marker(
+        // This marker id can be anything that uniquely identifies each marker.
+        markerId: MarkerId(_mainLocation.toString()),
+        position: _mainLocation,
+        infoWindow: InfoWindow(
+          title: 'Historical City',
+          snippet: '5 Star Rating',
+        ),
+        icon: BitmapDescriptor.defaultMarker,
+      ));
+    });
+
+    return _markers;
   }
 }
 
