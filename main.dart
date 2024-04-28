@@ -664,7 +664,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => pegarLocalizacao()),
+              MaterialPageRoute(builder: (context) => PegarLocalizacao()),
             );
           },
           style: OutlinedButton.styleFrom(
@@ -921,78 +921,39 @@ class _PerguntaAppState extends State<PerguntaApp> {
 }
 
 // Guia Localização
-class pegarLocalizacao extends StatefulWidget {
+class PegarLocalizacao extends StatefulWidget {
+  const PegarLocalizacao({super.key});
+
   @override
-  _pegarLocalizacaoState createState() => _pegarLocalizacaoState();
+  State createState() => _PegarLocalizacaoState();
 }
 
-class _pegarLocalizacaoState extends State<pegarLocalizacao> {
-  late GoogleMapController myMapController;
-  final Set<Marker> _markers = new Set();
-  static const LatLng _mainLocation = const LatLng(25.69893, 32.6421);
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-        home: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(kToolbarHeight),
-          //Top Bar
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFF0E1315),
-              border: Border(
-                bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
-              ),
-            ),
-            child: AppBar(
-              title: Text(
-                'Editar Localização',
-                style:
-                    GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
-              ),
-              backgroundColor: Colors.transparent,
-              centerTitle: true,
-              elevation: 0,
-            ),
-          ),
-        ),
-            body: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Expanded(
-                  child: GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: _mainLocation,
-                      zoom: 10.0,
-                    ),
-                    markers: this.myMarker(),
-                    mapType: MapType.normal,
-                    onMapCreated: (controller) {
-                      setState(() {
-                        myMapController = controller;
-                      });
-                    },
-                  ),
-                ),
-              ],
-            )));
+class _PegarLocalizacaoState extends State {
+  late GoogleMapController mapController;
+
+  final LatLng _center = const LatLng(-15.793889, -47.882778);
+
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
   }
 
-  Set<Marker> myMarker() {
-    setState(() {
-      _markers.add(Marker(
-        // This marker id can be anything that uniquely identifies each marker.
-        markerId: MarkerId(_mainLocation.toString()),
-        position: _mainLocation,
-        infoWindow: InfoWindow(
-          title: 'Historical City',
-          snippet: '5 Star Rating',
+  @override
+  Widget build(BuildContext context){ 
+    return MaterialApp( 
+      home: Scaffold( 
+        appBar: AppBar( 
+          title: const Text('Editar Localização'),
+          backgroundColor: Color(0xFF0E1315),
         ),
-        icon: BitmapDescriptor.defaultMarker,
-      ));
-    });
-
-    return _markers;
+        body: GoogleMap( 
+          onMapCreated: _onMapCreated,
+          initialCameraPosition: CameraPosition( 
+            target: _center,
+            zoom: 11.0
+          ),
+        )
+      )
+    );
   }
 }
 
