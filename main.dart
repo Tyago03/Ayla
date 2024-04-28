@@ -18,8 +18,18 @@ class PerguntaApp extends StatefulWidget {
 }
 
 class _PerguntaAppState extends State<PerguntaApp> {
+  //Nome do usuário
+  String nomeUsuario = 'User';
+
   // Variável para armazenar a imagem selecionada
   XFile? _imageFile;
+
+  // Método para alterar o nome do usuário
+  void _alterarNomeUsuario(String novoNome) {
+    setState(() {
+      nomeUsuario = novoNome.isNotEmpty ? novoNome : 'User';
+    });
+  }
 
   // Função para pegar a imagem da galeria ou câmera
   Future<void> _pickImage(ImageSource source) async {
@@ -94,7 +104,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
         ),
         const SizedBox(height: 50),
         Text(
-          'Olá, Tyago',
+          'Olá, $nomeUsuario', // Usa a variável de estado aqui
           style: GoogleFonts.josefinSans(fontSize: 30, color: Colors.white),
         ),
         const SizedBox(height: 20),
@@ -296,6 +306,8 @@ class _PerguntaAppState extends State<PerguntaApp> {
 
   //Sub-Aba Alterar Nome
   Widget _buildAlterarNome() {
+    final TextEditingController _nomeController = TextEditingController();
+    final TextEditingController _sobrenomeController = TextEditingController();
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
@@ -335,7 +347,9 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 30),
-              const TextField(
+              TextField(
+                textCapitalization: TextCapitalization.sentences,
+                controller: _nomeController,
                 cursorColor: Colors.white,
                 obscureText: false,
                 decoration: InputDecoration(
@@ -353,7 +367,9 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 20),
-              const TextField(
+               TextField(
+                textCapitalization: TextCapitalization.sentences,
+                controller: _sobrenomeController,
                 cursorColor: Colors.white,
                 obscureText: false,
                 decoration: InputDecoration(
@@ -373,6 +389,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
               const SizedBox(height: 40),
               ElevatedButton(
                 onPressed: () {
+                  _alterarNomeUsuario(_nomeController.text);
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
@@ -938,40 +955,36 @@ class _PegarLocalizacaoState extends State {
   }
 
   @override
-  Widget build(BuildContext context){ 
-    return MaterialApp( 
-      home: Scaffold( 
-appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(kToolbarHeight),
-          //Top Bar
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFF0E1315),
-              border: Border(
-                bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        home: Scaffold(
+            appBar: PreferredSize(
+              preferredSize: const Size.fromHeight(kToolbarHeight),
+              //Top Bar
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0E1315),
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
+                  ),
+                ),
+                child: AppBar(
+                  title: Text(
+                    'Editar Localização',
+                    style: GoogleFonts.josefinSans(
+                        color: Colors.white, fontSize: 28),
+                  ),
+                  backgroundColor: Colors.transparent,
+                  centerTitle: true,
+                  elevation: 0,
+                ),
               ),
             ),
-            child: AppBar(
-              title: Text(
-                'Editar Localização',
-                style:
-                    GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
-              ),
-              backgroundColor: Colors.transparent,
-              centerTitle: true,
-              elevation: 0,
-            ),
-          ),
-        ),
-        body: GoogleMap( 
-          onMapCreated: _onMapCreated,
-          initialCameraPosition: CameraPosition( 
-            target: _center,
-            zoom: 11.0
-          ),
-        )
-      )
-    );
+            body: GoogleMap(
+              onMapCreated: _onMapCreated,
+              initialCameraPosition:
+                  CameraPosition(target: _center, zoom: 11.0),
+            )));
   }
 }
 
