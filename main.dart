@@ -941,9 +941,27 @@ class _PegarLocalizacaoState extends State {
   Widget build(BuildContext context){ 
     return MaterialApp( 
       home: Scaffold( 
-        appBar: AppBar( 
-          title: const Text('Editar Localização'),
-          backgroundColor: Color(0xFF0E1315),
+appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          //Top Bar
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFF0E1315),
+              border: Border(
+                bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
+              ),
+            ),
+            child: AppBar(
+              title: Text(
+                'Editar Localização',
+                style:
+                    GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
+              ),
+              backgroundColor: Colors.transparent,
+              centerTitle: true,
+              elevation: 0,
+            ),
+          ),
         ),
         body: GoogleMap( 
           onMapCreated: _onMapCreated,
