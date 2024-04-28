@@ -339,7 +339,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 cursorColor: Colors.white,
                 obscureText: false,
                 decoration: InputDecoration(
-                  labelText: 'Nome',
+                  labelText: 'Novo Nome',
                   labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
                   border: OutlineInputBorder(),
                   enabledBorder: OutlineInputBorder(
@@ -357,7 +357,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 cursorColor: Colors.white,
                 obscureText: false,
                 decoration: InputDecoration(
-                  labelText: 'Sobrenome',
+                  labelText: 'Novo Sobrenome',
                   labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
                   border: OutlineInputBorder(),
                   enabledBorder: OutlineInputBorder(
