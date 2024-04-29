@@ -863,6 +863,42 @@ class _PerguntaAppState extends State<PerguntaApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+          theme: ThemeData(
+      primaryColor: Color(0xFF0DAD9E),
+      colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Color(0xFF0DAD9E)),
+      buttonTheme: ButtonThemeData(
+        buttonColor: Color(0xFF0DAD9E),
+        textTheme: ButtonTextTheme.primary,
+      ),
+      dialogBackgroundColor: Color(0xFF0E1315),
+      dialogTheme: DialogTheme(
+        backgroundColor: Color(0xFF0E1315),
+        titleTextStyle: TextStyle(
+          color: Colors.black,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+        contentTextStyle: TextStyle(
+          color: Colors.black,
+          fontSize: 18,
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFF0DAD9E)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFF0DAD9E)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFF0DAD9E), width: 2.0),
+        ),
+        labelStyle: TextStyle(color: Colors.white),
+      ),
+      iconTheme: IconThemeData(
+        color: Colors.black,
+      ),
+    ),
       home: Scaffold(
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(kToolbarHeight),
@@ -1134,18 +1170,18 @@ class _AdicionarAlarmesState extends State<AdicionarAlarmes> {
               SizedBox(height: 40),
               OutlinedButton(
                 onPressed: () {
-                  if (alarmNameController.text.isNotEmpty) {
-                    setState(() {
-                      alarmes.add(
-                          "${alarmNameController.text} - ${selectedTime.format(context)}");
-                    });
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => EditarAlarmes(
-                        alarmes: alarmes,
-                        onAlarmesUpdated: () => setState(() {}),
-                      ),
-                    ));
-                  }
+                  String alarmName = alarmNameController.text.isEmpty
+                      ? ''
+                      : alarmNameController.text;
+                  setState(() {
+                    alarmes.add("$alarmName - ${selectedTime.format(context)}");
+                  });
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => EditarAlarmes(
+                      alarmes: alarmes,
+                      onAlarmesUpdated: () => setState(() {}),
+                    ),
+                  ));
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
