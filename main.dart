@@ -10,6 +10,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 void main() => runApp(const MyApp());
 
+int currentIndex = 0;
+
 class PerguntaApp extends StatefulWidget {
   const PerguntaApp({super.key});
 
@@ -72,8 +74,6 @@ class _PerguntaAppState extends State<PerguntaApp> {
       );
     }
   }
-
-  int _currentIndex = 0;
 
   // Itens da NavBar
   final List<String> _titles = const ['Início', 'Perfil', 'Configurações'];
@@ -367,7 +367,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 20),
-               TextField(
+              TextField(
                 textCapitalization: TextCapitalization.sentences,
                 controller: _sobrenomeController,
                 cursorColor: Colors.white,
@@ -836,7 +836,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
 
   // Sistema para mudar de Aba
   Widget _getCurrentPage() {
-    switch (_currentIndex) {
+    switch (currentIndex) {
       case 0:
         return _buildInicioPage();
       case 1:
@@ -879,7 +879,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
             ),
             child: AppBar(
               title: Text(
-                _titles[_currentIndex],
+                _titles[currentIndex],
                 style:
                     GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
               ),
@@ -906,10 +906,10 @@ class _PerguntaAppState extends State<PerguntaApp> {
           child: BottomNavigationBar(
             iconSize: 40,
             backgroundColor: const Color(0xFF0E1315),
-            currentIndex: _currentIndex,
+            currentIndex: currentIndex,
             onTap: (int newIndex) {
               setState(() {
-                _currentIndex = newIndex;
+                currentIndex = 2;
               });
             },
             items: const [
@@ -945,46 +945,93 @@ class PegarLocalizacao extends StatefulWidget {
   State createState() => _PegarLocalizacaoState();
 }
 
-class _PegarLocalizacaoState extends State {
+class _PegarLocalizacaoState extends State<PegarLocalizacao> {
   late GoogleMapController mapController;
+  Set<Marker> markers = {};
 
   final LatLng _center = const LatLng(-15.793889, -47.882778);
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
+    _updateMarker(_center);
+  }
+
+  void _updateMarker(LatLng newLocation) {
+    setState(() {
+      markers.clear();
+      markers.add(
+        Marker(
+          markerId: const MarkerId('selectedLocation'),
+          position: newLocation,
+        ),
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        home: Scaffold(
-            appBar: PreferredSize(
-              preferredSize: const Size.fromHeight(kToolbarHeight),
-              //Top Bar
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFF0E1315),
-                  border: Border(
-                    bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
-                  ),
-                ),
-                child: AppBar(
-                  title: Text(
-                    'Editar Localização',
-                    style: GoogleFonts.josefinSans(
-                        color: Colors.white, fontSize: 28),
-                  ),
-                  backgroundColor: Colors.transparent,
-                  centerTitle: true,
-                  elevation: 0,
-                ),
+      home: Scaffold(
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFF0E1315),
+              border: Border(
+                bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
               ),
             ),
-            body: GoogleMap(
-              onMapCreated: _onMapCreated,
-              initialCameraPosition:
-                  CameraPosition(target: _center, zoom: 11.0),
-            )));
+            child: AppBar(
+              title: Text(
+                'Editar Localização',
+                style:
+                    GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
+              ),
+              backgroundColor: Colors.transparent,
+              centerTitle: true,
+              elevation: 0,
+            ),
+          ),
+        ),
+        body: GoogleMap(
+          onMapCreated: _onMapCreated,
+          onTap: _updateMarker, // Atualiza o marcador quando o mapa é clicado
+          initialCameraPosition: CameraPosition(target: _center, zoom: 11.0),
+          markers: markers,
+        ),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Color(0xFF0E1315),
+            border: Border(
+              top: BorderSide(color: Color(0xFF0DAD9E), width: 2.0),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  currentIndex = 2;
+                });
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PerguntaApp()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Colors.white, width: 2),
+                elevation: 0,
+                minimumSize: const Size(200, 48),
+              ),
+              child: Text('Concluido',
+                  style: GoogleFonts.josefinSans(fontSize: 20)),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -1351,6 +1398,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// Guia de Login
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -1358,7 +1406,6 @@ class LoginScreen extends StatefulWidget {
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-// Guia de Login
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
