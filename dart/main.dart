@@ -13,6 +13,9 @@ void main() => runApp(const MyApp());
 // Variável global da NavBar
 int currentIndex = 0;
 
+//Lista armazenar alarmes
+List<String> alarmes = [];
+
 class PerguntaApp extends StatefulWidget {
   const PerguntaApp({super.key});
 
@@ -21,6 +24,22 @@ class PerguntaApp extends StatefulWidget {
 }
 
 class _PerguntaAppState extends State<PerguntaApp> {
+  //Variável salvar horário selecionado
+  TimeOfDay selectedTime = TimeOfDay(hour: 0, minute: 0);
+
+  // Função para selecionar tempo
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: selectedTime,
+    );
+    if (picked != null && picked != selectedTime) {
+      setState(() {
+        selectedTime = picked; // Agora usando setState corretamente
+      });
+    }
+  }
+
   //Nome do usuário
   String nomeUsuario = 'User';
 
@@ -238,6 +257,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
   Widget _buildAlterarFoto() {
     return Scaffold(
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: Color(0xFF0E1315),
         title: Text(
           'Alterar Foto',
@@ -316,10 +336,11 @@ class _PerguntaAppState extends State<PerguntaApp> {
           decoration: const BoxDecoration(
             color: Color(0xFF0E1315),
             border: Border(
-              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
+              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 4.0),
             ),
           ),
           child: AppBar(
+            iconTheme: IconThemeData(color: Colors.white),
             title: Text(
               'Alterar Nome',
               style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
@@ -388,20 +409,19 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 40),
-              ElevatedButton(
+              OutlinedButton(
                 onPressed: () {
                   _alterarNomeUsuario(_nomeController.text);
                   Navigator.pop(context);
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
+                style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white, width: 2),
-                  elevation: 0,
-                  minimumSize: const Size(200, 48),
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  side: BorderSide(color: Colors.white, width: 2),
+                  textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                  minimumSize: Size(240, 48),
                 ),
-                child: Text('Concluido',
-                    style: GoogleFonts.josefinSans(fontSize: 20)),
+                child: const Text('Concluído'),
               )
             ],
           ),
@@ -420,10 +440,11 @@ class _PerguntaAppState extends State<PerguntaApp> {
           decoration: const BoxDecoration(
             color: Color(0xFF0E1315),
             border: Border(
-              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
+              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 4.0),
             ),
           ),
           child: AppBar(
+            iconTheme: IconThemeData(color: Colors.white),
             title: Text(
               'Alterar E-Mail',
               style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
@@ -488,20 +509,19 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 40),
-              ElevatedButton(
+              OutlinedButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
+                style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white, width: 2),
-                  elevation: 0,
-                  minimumSize: const Size(200, 48),
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  side: BorderSide(color: Colors.white, width: 2),
+                  textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                  minimumSize: Size(240, 48),
                 ),
-                child: Text('Concluido',
-                    style: GoogleFonts.josefinSans(fontSize: 20)),
-              )
+                child: const Text('Concluído'),
+              ),
             ],
           ),
         ),
@@ -519,10 +539,11 @@ class _PerguntaAppState extends State<PerguntaApp> {
           decoration: const BoxDecoration(
             color: Color(0xFF0E1315),
             border: Border(
-              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
+              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 4.0),
             ),
           ),
           child: AppBar(
+            iconTheme: IconThemeData(color: Colors.white),
             title: Text(
               'Alterar Senha',
               style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
@@ -587,20 +608,19 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 40),
-              ElevatedButton(
+              OutlinedButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
+                style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white, width: 2),
-                  elevation: 0,
-                  minimumSize: const Size(200, 48),
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  side: BorderSide(color: Colors.white, width: 2),
+                  textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                  minimumSize: Size(240, 48),
                 ),
-                child: Text('Concluido',
-                    style: GoogleFonts.josefinSans(fontSize: 20)),
-              )
+                child: const Text('Concluído'),
+              ),
             ],
           ),
         ),
@@ -664,8 +684,13 @@ class _PerguntaAppState extends State<PerguntaApp> {
         OutlinedButton(
           // Botão para a Sub-Aba Editar Alarmes
           onPressed: () {
-            Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => _buildEditarAlarmes()));
+            Navigator.of(context).pushReplacement(MaterialPageRoute(
+              builder: (context) => EditarAlarmes(
+                  alarmes: alarmes,
+                  onAlarmesUpdated: () {
+                    setState(() {});
+                  }),
+            ));
           },
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.white,
@@ -709,10 +734,11 @@ class _PerguntaAppState extends State<PerguntaApp> {
           decoration: const BoxDecoration(
             color: Color(0xFF0E1315),
             border: Border(
-              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
+              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 4.0),
             ),
           ),
           child: AppBar(
+            iconTheme: IconThemeData(color: Colors.white),
             title: Text(
               'Reconfigurar sua Voz',
               style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
@@ -733,20 +759,19 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 width: 1300,
                 height: 100,
               ),
-              ElevatedButton(
+              OutlinedButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
+                style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white, width: 2),
-                  elevation: 0,
-                  minimumSize: const Size(200, 48),
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  side: BorderSide(color: Colors.white, width: 2),
+                  textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                  minimumSize: Size(240, 48),
                 ),
-                child: Text('Concluido',
-                    style: GoogleFonts.josefinSans(fontSize: 20)),
-              )
+                child: const Text('Concluído'),
+              ),
             ],
           ),
         ),
@@ -763,10 +788,11 @@ class _PerguntaAppState extends State<PerguntaApp> {
           decoration: const BoxDecoration(
             color: Color(0xFF0E1315),
             border: Border(
-              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
+              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 4.0),
             ),
           ),
           child: AppBar(
+            iconTheme: IconThemeData(color: Colors.white),
             title: Text(
               'Alterar voz da Ayla',
               style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
@@ -787,51 +813,23 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 width: 1300,
                 height: 100,
               ),
-              ElevatedButton(
+              OutlinedButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
+                style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white, width: 2),
-                  elevation: 0,
-                  minimumSize: const Size(200, 48),
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  side: BorderSide(color: Colors.white, width: 2),
+                  textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                  minimumSize: Size(240, 48),
                 ),
-                child: Text('Concluido',
-                    style: GoogleFonts.josefinSans(fontSize: 20)),
-              )
+                child: const Text('Concluído'),
+              ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  //Sub-Aba Editar Alarmes
-  Widget _buildEditarAlarmes() {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF0E1315),
-            border: Border(
-              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
-            ),
-          ),
-          child: AppBar(
-            title: Text(
-              'Editar Alarmes',
-              style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
-            ),
-            backgroundColor: Colors.transparent,
-            centerTitle: true,
-            elevation: 0,
-          ),
-        ),
-      ),
-      backgroundColor: const Color(0xFF0E1315),
     );
   }
 
@@ -856,8 +854,6 @@ class _PerguntaAppState extends State<PerguntaApp> {
         return _buildReconfigurarVoz();
       case 8:
         return _buildAlterarVozAyla();
-      case 9:
-        return _buildEditarAlarmes();
       default:
         return _buildInicioPage();
     }
@@ -875,7 +871,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
             decoration: const BoxDecoration(
               color: Color(0xFF0E1315),
               border: Border(
-                bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
+                bottom: BorderSide(color: Color(0xFF0DAD9E), width: 4.0),
               ),
             ),
             child: AppBar(
@@ -901,7 +897,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
           decoration: const BoxDecoration(
             color: Color(0xFF0E1315),
             border: Border(
-              top: BorderSide(color: Color(0xFF0DAD9E), width: 1.5),
+              top: BorderSide(color: Color(0xFF0DAD9E), width: 4.0),
             ),
           ),
           child: BottomNavigationBar(
@@ -931,6 +927,236 @@ class _PerguntaAppState extends State<PerguntaApp> {
             unselectedItemColor: Colors.grey[600],
             showSelectedLabels: false,
             showUnselectedLabels: false,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+//Guia Editar Alarmes
+class EditarAlarmes extends StatefulWidget {
+  final List<String> alarmes;
+  final VoidCallback onAlarmesUpdated;
+
+  const EditarAlarmes(
+      {Key? key, required this.alarmes, required this.onAlarmesUpdated})
+      : super(key: key);
+
+  @override
+  _EditarAlarmesPageState createState() => _EditarAlarmesPageState();
+}
+
+class _EditarAlarmesPageState extends State<EditarAlarmes> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            currentIndex = 2;
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const PerguntaApp()),
+            );
+          },
+        ),
+        title: Text(
+          'Editar Alarmes',
+          style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
+        ),
+        backgroundColor: Color(0xFF0E1315),
+        centerTitle: true,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(4.0),
+          child: Container(
+            color: Color(0xFF0DAD9E),
+            height: 4.0,
+          ),
+        ),
+      ),
+      backgroundColor: const Color(0xFF0E1315),
+      floatingActionButton: Container(
+        margin: EdgeInsets.only(bottom: 80),
+        child: SizedBox(
+          width: 70,
+          height: 70,
+          child: FloatingActionButton(
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const AdicionarAlarmes()));
+            },
+            child: Icon(
+              Icons.add,
+              size: 40,
+              color: Color(0xFF0E1315),
+            ),
+            backgroundColor: Color(0xFF0DAD9E),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      body: Center(
+          child: alarmes.isEmpty
+              ? Text(
+                  "Nenhum alarme configurado.",
+                  style: GoogleFonts.josefinSans(
+                      fontSize: 20, color: Colors.white),
+                )
+              : ListView.builder(
+                  itemCount: alarmes.length,
+                  itemBuilder: (context, index) {
+                    return Column(
+                      children: [
+                        ListTile(
+                          leading: Icon(Icons.alarm, color: Colors.white),
+                          title: Text(
+                            alarmes[index].split(" - ")[0],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white, fontSize: 24),
+                          ),
+                          trailing: Text(
+                            alarmes[index].split(" - ")[1],
+                            style: TextStyle(color: Colors.white, fontSize: 24),
+                          ),
+                        ),
+                        Divider(
+                            color: Color(0xFF0DAD9E),
+                            thickness: 1,
+                            height: 1), // Sem padding
+                      ],
+                    );
+                  },
+                )),
+    );
+  }
+}
+
+// Guia Adicionar Alarmes
+class AdicionarAlarmes extends StatefulWidget {
+  const AdicionarAlarmes({Key? key}) : super(key: key);
+
+  @override
+  _AdicionarAlarmesState createState() => _AdicionarAlarmesState();
+}
+
+class _AdicionarAlarmesState extends State<AdicionarAlarmes> {
+  final TextEditingController alarmNameController = TextEditingController();
+  TimeOfDay selectedTime = TimeOfDay(hour: 0, minute: 0);
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: selectedTime,
+    );
+    if (picked != null && picked != selectedTime) {
+      setState(() {
+        selectedTime = picked;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            currentIndex = 2;
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const PerguntaApp()),
+            );
+          },
+        ),
+        title: Text(
+          'Adicionar Alarmes',
+          style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
+        ),
+        backgroundColor: Color(0xFF0E1315),
+        centerTitle: true,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(4.0),
+          child: Container(
+            color: Color(0xFF0DAD9E),
+            height: 4.0,
+          ),
+        ),
+      ),
+      backgroundColor: const Color(0xFF0E1315),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              TextField(
+                controller: alarmNameController,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(
+                  labelText: 'Nome do alarme',
+                  labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF0DAD9E)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Color(0xFF0DAD9E), width: 2.0),
+                  ),
+                ),
+                style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(height: 20),
+              OutlinedButton(
+                onPressed: () => _selectTime(context),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  side: BorderSide(color: Colors.white, width: 2),
+                  textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                  minimumSize: Size(240, 48),
+                ),
+                child: const Text('Selecionar Horário'),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Horário selecionado: ${selectedTime.format(context)}',
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
+              SizedBox(height: 40),
+              OutlinedButton(
+                onPressed: () {
+                  if (alarmNameController.text.isNotEmpty) {
+                    setState(() {
+                      alarmes.add(
+                          "${alarmNameController.text} - ${selectedTime.format(context)}");
+                    });
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => EditarAlarmes(
+                        alarmes: alarmes,
+                        onAlarmesUpdated: () => setState(() {}),
+                      ),
+                    ));
+                  }
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  side: BorderSide(color: Colors.white, width: 2),
+                  textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                  minimumSize: Size(240, 48),
+                ),
+                child: const Text('Concluído'),
+              ),
+            ],
           ),
         ),
       ),
@@ -971,62 +1197,64 @@ class _PegarLocalizacaoState extends State<PegarLocalizacao> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(kToolbarHeight),
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            currentIndex = 2;
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const PerguntaApp()),
+            );
+          },
+        ),
+        title: Text(
+          'Editar Localização',
+          style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
+        ),
+        backgroundColor: Color(0xFF0E1315),
+        centerTitle: true,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(4.0),
           child: Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFF0E1315),
-              border: Border(
-                bottom: BorderSide(color: Color(0xFF0DAD9E), width: 1.6),
-              ),
-            ),
-            child: AppBar(
-              title: Text(
-                'Editar Localização',
-                style:
-                    GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
-              ),
-              backgroundColor: Colors.transparent,
-              centerTitle: true,
-              elevation: 0,
-            ),
+            color: Color(0xFF0DAD9E),
+            height: 4.0,
           ),
         ),
-        body: GoogleMap(
-          onMapCreated: _onMapCreated,
-          onTap: _updateMarker, // Atualiza o marcador quando o mapa é clicado
-          initialCameraPosition: CameraPosition(target: _center, zoom: 11.0),
-          markers: markers,
-        ),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: Color(0xFF0E1315),
-            border: Border(
-              top: BorderSide(color: Color(0xFF0DAD9E), width: 2.0),
-            ),
+      ),
+      body: GoogleMap(
+        onMapCreated: _onMapCreated,
+        onTap: _updateMarker, // Atualiza o marcador quando o mapa é clicado
+        initialCameraPosition: CameraPosition(target: _center, zoom: 11.0),
+        markers: markers,
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Color(0xFF0E1315),
+          border: Border(
+            top: BorderSide(color: Color(0xFF0DAD9E), width: 4.0),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: ElevatedButton(
-              onPressed: () {
-                currentIndex = 2;
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const PerguntaApp()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: Colors.white, width: 2),
-                elevation: 0,
-                minimumSize: const Size(200, 48),
-              ),
-              child: Text('Concluido',
-                  style: GoogleFonts.josefinSans(fontSize: 20)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: OutlinedButton(
+            onPressed: () {
+              currentIndex = 2;
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const PerguntaApp()),
+              );
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.white.withOpacity(0.1),
+              side: BorderSide(color: Colors.white, width: 2),
+              textStyle: GoogleFonts.josefinSans(fontSize: 20),
+              minimumSize: Size(240, 48),
             ),
+            child: const Text('Concluído'),
           ),
         ),
       ),
@@ -1067,22 +1295,21 @@ class RegistrationCompletePage extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 60),
-            ElevatedButton(
+            OutlinedButton(
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
                 );
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
+              style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white,
-                side: const BorderSide(color: Colors.white, width: 2),
-                elevation: 0,
-                minimumSize: const Size(200, 48),
+                backgroundColor: Colors.white.withOpacity(0.1),
+                side: BorderSide(color: Colors.white, width: 2),
+                textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                minimumSize: Size(240, 48),
               ),
-              child: Text("Ir para o Login",
-                  style: GoogleFonts.josefinSans(fontSize: 20)),
+              child: const Text('Concluído'),
             ),
           ],
         ),
@@ -1208,7 +1435,7 @@ class RegisterPage extends StatelessWidget {
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 40),
-              ElevatedButton(
+              OutlinedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -1216,16 +1443,15 @@ class RegisterPage extends StatelessWidget {
                         builder: (context) => const RegistrationCompletePage()),
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
+                style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white, width: 2),
-                  elevation: 0,
-                  minimumSize: const Size(200, 48),
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  side: BorderSide(color: Colors.white, width: 2),
+                  textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                  minimumSize: Size(240, 48),
                 ),
-                child: Text('Registrar',
-                    style: GoogleFonts.josefinSans(fontSize: 20)),
-              )
+                child: const Text('Avançar'),
+              ),
             ],
           ),
         ),
@@ -1274,22 +1500,21 @@ class ThankYouPage extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 60),
-            ElevatedButton(
+            OutlinedButton(
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
                 );
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
+              style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white,
-                side: const BorderSide(color: Colors.white, width: 2),
-                elevation: 0,
-                minimumSize: const Size(200, 48),
+                backgroundColor: Colors.white.withOpacity(0.1),
+                side: BorderSide(color: Colors.white, width: 2),
+                textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                minimumSize: Size(240, 48),
               ),
-              child: Text("Retornar a tela de Login",
-                  style: GoogleFonts.josefinSans(fontSize: 20)),
+              child: const Text('Concluído'),
             ),
           ],
         ),
@@ -1354,7 +1579,7 @@ class ForgotPasswordPage extends StatelessWidget {
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 40),
-              ElevatedButton(
+              OutlinedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -1362,15 +1587,14 @@ class ForgotPasswordPage extends StatelessWidget {
                         builder: (context) => const ThankYouPage()),
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
+                style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white, width: 2),
-                  elevation: 0,
-                  minimumSize: const Size(200, 48),
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  side: BorderSide(color: Colors.white, width: 2),
+                  textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                  minimumSize: Size(240, 48),
                 ),
-                child: Text("Avançar",
-                    style: GoogleFonts.josefinSans(fontSize: 20)),
+                child: const Text('Avançar'),
               ),
             ],
           ),
@@ -1501,23 +1725,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
+              OutlinedButton(
                 onPressed: () {
+                  currentIndex = 0;
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                         builder: (context) => const PerguntaApp()),
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
+                style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white, width: 2),
-                  elevation: 0,
-                  minimumSize: const Size(200, 48),
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  side: BorderSide(color: Colors.white, width: 2),
+                  textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                  minimumSize: Size(240, 48),
                 ),
-                child:
-                    Text("Login", style: GoogleFonts.josefinSans(fontSize: 20)),
+                child: const Text('Login'),
               ),
               const SizedBox(height: 20),
               Row(
@@ -1548,7 +1772,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
+              OutlinedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -1556,16 +1780,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         builder: (context) => const RegisterPage()),
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
+                style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white, width: 2),
-                  elevation: 0,
-                  minimumSize: const Size(200, 48),
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  side: BorderSide(color: Colors.white, width: 2),
+                  textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                  minimumSize: Size(240, 48),
                 ),
-                child: Text("Cadastre-se",
-                    style: GoogleFonts.josefinSans(fontSize: 20)),
-              )
+                child: const Text('Cadastre-se'),
+              ),
             ],
           ),
         ),
