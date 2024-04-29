@@ -909,7 +909,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
             currentIndex: currentIndex,
             onTap: (int newIndex) {
               setState(() {
-                currentIndex = 2;
+                currentIndex = newIndex;
               });
             },
             items: const [
@@ -1010,9 +1010,7 @@ class _PegarLocalizacaoState extends State<PegarLocalizacao> {
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: ElevatedButton(
               onPressed: () {
-                setState(() {
-                  currentIndex = 2;
-                });
+                currentIndex = 2;
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => const PerguntaApp()),
