@@ -1,3 +1,5 @@
+Main.py
+
 **Ideias:**
 - Funções de gerenciamento de tarefas diárias, rotinas, lembretes e listas de compras;
 - Integrar com o WhatsApp;
@@ -17,3 +19,10 @@
 - Melhorar o sistema de reconhecimento e processamento de voz.
 
 
+Main.dart
+
+** A Melhorar **
+- Mudar o input do CEP no cadastro para aceitar somente números;
+- Colocar um círculo quando não houver foto de perfil em Perfil;
+- Criar a tela 'Editar Alarmes';
+- Poder achar su localização também por escrito.
