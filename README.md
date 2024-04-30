@@ -1,4 +1,4 @@
-Main.py
+**Main.py**
 
 **Ideias:**
 - Funções de gerenciamento de tarefas diárias, rotinas, lembretes e listas de compras;
@@ -11,17 +11,16 @@ Main.py
 - Personalização da Ayla pelo usuário;
 - Coseguir distinguir vozes diferentes (tentar);
 
-
-
 **A Melhorar:**
 - Criar uma função para a configuração inicial (recolher nome, reconhecimento de voz, localização atual...)
 - Melhorar a função de clima e temperatura;
 - Melhorar o sistema de reconhecimento e processamento de voz.
 
 
-Main.dart
 
-** A Melhorar **
+**Main.dart**
+
+**A Melhorar**
 - Mudar o input do CEP no cadastro para aceitar somente números;
 - Colocar um círculo quando não houver foto de perfil em Perfil;
 - Criar a tela 'Editar Alarmes';
