@@ -24,4 +24,5 @@
 - Mudar o input do CEP no cadastro para aceitar somente números;
 - Colocar um círculo quando não houver foto de perfil em Perfil;
 - Criar a tela 'Editar Alarmes';
-- Poder achar su localização também por escrito.
+- Poder achar sua localização também por escrito;
+- Mudar as telas de selecionar horario e selecionar imagem para escuras.
