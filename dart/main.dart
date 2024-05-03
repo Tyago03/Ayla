@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -863,42 +864,43 @@ class _PerguntaAppState extends State<PerguntaApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-          theme: ThemeData(
-      primaryColor: Color(0xFF0DAD9E),
-      colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Color(0xFF0DAD9E)),
-      buttonTheme: ButtonThemeData(
-        buttonColor: Color(0xFF0DAD9E),
-        textTheme: ButtonTextTheme.primary,
-      ),
-      dialogBackgroundColor: Color(0xFF0E1315),
-      dialogTheme: DialogTheme(
-        backgroundColor: Color(0xFF0E1315),
-        titleTextStyle: TextStyle(
+      theme: ThemeData(
+        primaryColor: Color(0xFF0DAD9E),
+        colorScheme:
+            ColorScheme.fromSwatch().copyWith(secondary: Color(0xFF0DAD9E)),
+        buttonTheme: ButtonThemeData(
+          buttonColor: Color(0xFF0DAD9E),
+          textTheme: ButtonTextTheme.primary,
+        ),
+        dialogBackgroundColor: Color(0xFF0E1315),
+        dialogTheme: DialogTheme(
+          backgroundColor: Color(0xFF0E1315),
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          contentTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(
+            borderSide: BorderSide(color: Color(0xFF0DAD9E)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Color(0xFF0DAD9E)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Color(0xFF0DAD9E), width: 2.0),
+          ),
+          labelStyle: TextStyle(color: Colors.white),
+        ),
+        iconTheme: IconThemeData(
           color: Colors.black,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-        contentTextStyle: TextStyle(
-          color: Colors.black,
-          fontSize: 18,
         ),
       ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(
-          borderSide: BorderSide(color: Color(0xFF0DAD9E)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Color(0xFF0DAD9E)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Color(0xFF0DAD9E), width: 2.0),
-        ),
-        labelStyle: TextStyle(color: Colors.white),
-      ),
-      iconTheme: IconThemeData(
-        color: Colors.black,
-      ),
-    ),
       home: Scaffold(
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(kToolbarHeight),
@@ -1306,6 +1308,7 @@ class RegistrationCompletePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color(0xFF0E1315),
         title: Text('Cadastro Concluído',
             style: GoogleFonts.josefinSans(color: Colors.white)),
@@ -1361,8 +1364,11 @@ class RegisterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final TextEditingController cepController = TextEditingController();
+
     return Scaffold(
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color(0xFF0E1315),
         title: Text('Cadastro',
             style: GoogleFonts.josefinSans(color: Colors.white)),
@@ -1399,6 +1405,7 @@ class RegisterPage extends StatelessWidget {
                   ),
                 ),
                 style: TextStyle(color: Colors.white),
+                textCapitalization: TextCapitalization.words,
               ),
               const SizedBox(height: 20),
               const TextField(
@@ -1418,8 +1425,15 @@ class RegisterPage extends StatelessWidget {
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 20),
-              const TextField(
+              TextField(
+                controller: cepController,
                 cursorColor: Colors.white,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(
+                      9), // Garante que só temos espaço para 8 dígitos e 1 hífen
+                ],
                 decoration: InputDecoration(
                   labelText: 'CEP',
                   labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
@@ -1433,6 +1447,22 @@ class RegisterPage extends StatelessWidget {
                   ),
                 ),
                 style: TextStyle(color: Colors.white),
+                onChanged: (value) {
+                  // Verifica se precisa adicionar o hífen depois do quinto dígito
+                  String newText;
+                  if (value.length >= 6 && !value.contains('-')) {
+                    newText = value.substring(0, 5) + '-' + value.substring(5);
+                  } else {
+                    newText = value;
+                  }
+                  if (newText != value) {
+                    cepController.value = TextEditingValue(
+                      text: newText,
+                      selection:
+                          TextSelection.collapsed(offset: newText.length),
+                    );
+                  }
+                },
               ),
               const SizedBox(height: 20),
               const TextField(
