@@ -21,7 +21,6 @@
 **Main.dart**
 
 **A Melhorar**
-- Mudar o input do CEP no cadastro para aceitar somente números;
 - Colocar um círculo quando não houver foto de perfil em Perfil;
 - Criar a tela 'Editar Alarmes';
 - Poder achar sua localização também por escrito;
