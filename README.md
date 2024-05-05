@@ -25,3 +25,9 @@
 - Criar a tela 'Editar Alarmes';
 - Poder achar sua localização também por escrito;
 - Mudar as telas de selecionar horario e selecionar imagem para escuras.
+
+**Datas:**
+
+30/04: Entrrga do aplicativo finalizado.
+
+07/05: 
