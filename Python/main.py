@@ -1,4 +1,3 @@
-# Bibliotecas externas
 import speech_recognition as sr
 import pyttsx3
 import os
@@ -6,30 +5,16 @@ from datetime import date
 import datetime
 import requests
 
-
-
-# Variáveis definidas
+nome = "Tyago"
 hora = datetime.datetime.now()
 data = date.today()
 ds = date.weekday(data)
 dias = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
 meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 APIclima = "3fa1b2a2653d17190c4a1f574d8a259a"
-engine = pyttsx3.init()
+ativo = False  
+ultima_fala = datetime.datetime.now()
 
-
-
-# Funções
-def configInicial():
-    AylaDiz("Olá! vamos começar? Primeiro, qual é o seu nome?")
-
-def AylaDiz(comando):
-    engine.say(comando)
-    engine.runAndWait()
-
-
-
-# Código executado por voz
 while True:
     mic = sr.Recognizer()
 
@@ -45,26 +30,44 @@ while True:
             # Verificar se houve uma fala antes de tentar interpretar a frase
                 frase = mic.recognize_google(audio, language='pt-BR').lower()
 
-                # Verificar se a palavra de ativação foi dita
-                if 'ayla' in frase or 'aylla' in frase or 'aila' in frase or 'ailla' in frase:
+                # Verificar se a palavra de ativação foi dita e o sistema não estava ativo
+                if ('ayla' in frase or 'aylla' in frase or 'aila' in frase or 'ailla' in frase) and not ativo:
+                    print("Sistema ativado.")
+                    print("Fale:")
+                    print(frase)
+                    ativo = True
 
+
+                # Se o sistema estiver ativado, execute as ações
+                if ativo:
+
+                    if ('configuração' in frase) and 'inicial' in frase:
+                        engine.say("Vamos começar. Qual é o seu nome?")
+                        engine.runAndWait()
+                        audio = mic.listen(source)
+                        nome_usuario = mic.recognize_google(audio, language='pt-BR').lower()
+                        
+                        engine.say("Entendi. E em qual cidade você vive?")
+                        engine.runAndWait()
+                        audio = mic.listen(source)
+                        cidade_usuario = mic.recognize_google(audio, language='pt-BR').lower()
+
+                        engine.say(f"Certo. Seu nome é {nome_usuario}, e a cidade é {cidade_usuario}.")
+                        engine.runAndWait()
+                        ativo = False
+                        
                     # desligar / reiniciar o computador
-                    if frase == "desligue o computador":
+                    elif ('desligue' in frase) and 'computador' in frase:
                         engine.say("desligando o computador")
                         engine.runAndWait()
-                        #os.system("shutdown -s -t 1")
+                        # os.system("shutdown -s -t 1")
                         ativo = False
 
-                    elif frase == "reinicie o computador":
+                    elif ('reinicie' in frase) and 'computador' in frase:
                         engine.say("reiniciando o computador")
                         engine.runAndWait()
-                        #os.system("shutdown -r -t 1")
+                        # os.system("shutdown -r -t 1")
                         ativo = False
-
-                    elif "configuração inicial" in frase:
-                        print("configuração inicial")
-                        AylaDiz(frase)
-                        configInicial()
 
                     # abrir programas
                     elif ('abrir' in frase or 'abra' in frase) and ('opera' in frase or 'ópera' in frase):
@@ -97,35 +100,25 @@ while True:
                         engine.runAndWait()
                         ativo = False
 
-                    elif any(keyword in frase for keyword in ['que horas são', 'quais as horas', 'qual o horário', 'qual horario']):
+                    elif 'que horas são' in frase:
                         if hora.minute == 0:
                             engine.say(f"Agora são {hora.hour} horas em ponto.")
                             engine.runAndWait()
                         else:
                             engine.say(f"Agora são {hora.hour} horas e {hora.minute} minutos.")
+                            engine.runAndWait()
                         ativo = False
 
                     elif any(keyword in frase for keyword in ['temperatura', 'clima']):
-                        if 'goiânia' in frase:
-                            cid = f"https://api.openweathermap.org/data/2.5/weather?q=goiânia&appid={APIclima}&lang=pt_br"
-                            req = requests.get(cid)
-                            dic = requests.get(cid).json()
-                            temp = dic['main']['temp'] - 273.15
-                            descr = dic['weather'][0]['description']
-                            engine.say(f"A temperatura em Goiânia é de {round(temp, 0)} graus, e o clima é {descr}")
-                            engine.runAndWait()
-                            ativo = False
-                        else:
-                            cid = f"https://api.openweathermap.org/data/2.5/weather?q=brasília&appid={APIclima}&lang=pt_br"
-                            req = requests.get(cid)
-                            dic = requests.get(cid).json()
-                            temp = dic['main']['temp'] - 273.15
-                            descr = dic['weather'][0]['description']
-                            engine.say(f"A temperatura em Brasília é de {round(temp, 0)} graus, e o clima é {descr}")
-                            engine.runAndWait()
-                            ativo = False
-                else:
-                    print("comando recebido sem a palavra de ativação.")
+                        cid = f"https://api.openweathermap.org/data/2.5/weather?q={cidade_usuario}&appid={APIclima}&lang=pt_br"
+                        req = requests.get(cid)
+                        dic = requests.get(cid).json()
+                        temp = dic['main']['temp'] - 273.15
+                        descr = dic['weather'][0]['description']
+                        engine.say(f"A temperatura em {cidade_usuario} é de {round(temp, 0)} graus, e o clima é {descr}")
+                        engine.runAndWait()
+                        ativo = False
+                        
 
         except sr.UnknownValueError:
             print("Não entendi. Dê o comando novamente:")
