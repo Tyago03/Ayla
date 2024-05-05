@@ -24,5 +24,4 @@
 - Colocar um círculo quando não houver foto de perfil em Perfil;
 - Criar a tela 'Editar Alarmes';
 - Poder achar sua localização também por escrito;
-- Mudar as telas de selecionar horario e selecionar imagem para escuras;
-- Colocar a pasta com os ícones de perfil no GitHub.
+- Mudar as telas de selecionar horario e selecionar imagem para escuras.
