@@ -9,6 +9,12 @@ import requests
 nome_usuario = None
 cidade_usuario = None
 compras = []
+hora = datetime.datetime.now()
+data = date.today()
+ds = date.weekday(data)
+dias = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
+meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+APIclima = "3fa1b2a2653d17190c4a1f574d8a259a"
 
 def init_engine():
     engine = pyttsx3.init()
@@ -78,20 +84,48 @@ def main():
 
             command = listen_to_speech(recognizer, source)
 
+            # função configuração inicial
             if 'configuração' in command and 'inicial' in command:
                 configuracao_inicial(recognizer, source, engine)
 
+            # função cquem sou eu
             elif 'quem' in command and 'sou' in command and 'eu' in command:
                 respond(engine, f"Você é {nome_usuario}")
 
+            # função pegar horário
+            elif 'horas' in command and 'são' in command:
+                if hora.minute == 0:
+                    engine.say(f"Agora são {hora.hour} horas.")
+                    engine.runAndWait()
+                else:
+                    engine.say(f"Agora são {hora.hour} horas e {hora.minute} minutos.")
+                    engine.runAndWait()
+
+            # função pegar data
+            elif ('qual dia' in frase or 'que dia' in frase) and 'hoje' in frase:
+                engine.say(f"Hoje é {dias[ds]}, dia {data.day} de {meses[data.month - 1]} de {data.year}")
+                engine.runAndWait()
+
+            # função adicionar na lista de compras
             elif 'adicione' in command and 'lista de compras' in command:
                 item = command.replace('adicione', '').replace('à lista de compras', '').strip()
                 resposta = adicionar_a_lista(item)
                 respond(engine, resposta)
 
+            # função limpar lista de compras
             elif 'limpar lista' in command:
                 resposta = limpar_lista()
                 respond(engine, resposta)
+
+            # função pegar temperatura e clima
+            elif 'qual'in command and ('temperatura' in command or 'clima in command'):
+                cid = f"https://api.openweathermap.org/data/2.5/weather?q={cidade_usuario}&appid={APIclima}&lang=pt_br"
+                req = requests.get(cid)
+                dic = requests.get(cid).json()
+                temp = dic['main']['temp'] - 273.15
+                descr = dic['weather'][0]['description']
+                engine.say(f"A temperatura em {cidade_usuario} é de {round(temp, 0)} graus, e o clima é {descr}")
+                engine.runAndWait()
 
             elif command:
                 respond(engine, command)
