@@ -29,6 +29,24 @@ def init_recognizer():
     recognizer.energy_threshold += 100  # Ajustar a sensibilidade conforme necessário
     return recognizer
 
+'''def init_recognizer():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        recognizer.adjust_for_ambient_noise(source)  # Calibra baseado no ruído do ambiente
+        initial_threshold = recognizer.energy_threshold
+        while True:
+            try:
+                print("Ajustando sensibilidade...")
+                audio = recognizer.listen(source, timeout=1)
+                # Tenta detectar se o ambiente mudou significativamente
+                if recognizer.energy_threshold > initial_threshold + 50:
+                    recognizer.adjust_for_ambient_noise(source)
+                    print("Ambiente ruidoso, recalibrando...")
+                break
+            except sr.WaitTimeoutError:
+                continue  # Continua tentando ajustar até conseguir uma leitura estável
+    return recognizer'''
+
 def listen_to_speech(recognizer, source):
     try:
         print("Ouvindo...")
@@ -43,7 +61,7 @@ def respond(engine, text):
     print(f"Resposta: {text}")
     engine.say(text)
     engine.runAndWait()
-    engine.stop()  # Assegura que a fila de comandos está limpa
+    engine.stop()
 
 def get_user_confirmation(engine, recognizer, source, info_type):
     while True:
