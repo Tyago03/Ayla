@@ -1,0 +1,103 @@
+import speech_recognition as sr
+import pyttsx3
+import os
+from datetime import date
+import datetime
+import requests
+
+# Variáveis
+nome_usuario = None
+cidade_usuario = None
+compras = []
+
+def init_engine():
+    engine = pyttsx3.init()
+    engine.setProperty('voice', "com.apple.speech.synthesis.voice.luciana")
+    engine.setProperty('rate', 150)  # Velocidade da fala
+    return engine
+
+def init_recognizer():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        recognizer.adjust_for_ambient_noise(source, duration=1)  # Calibrar por 1 segundo
+    recognizer.energy_threshold += 100  # Ajustar a sensibilidade conforme necessário
+    return recognizer
+
+def listen_to_speech(recognizer, source):
+    try:
+        print("Ouvindo...")
+        audio = recognizer.listen(source, timeout=5, phrase_time_limit=3)
+        return recognizer.recognize_google(audio, language='pt-BR').lower()
+    except sr.UnknownValueError:
+        return "Não entendi"
+    except sr.RequestError:
+        return "Erro de serviço"
+
+def respond(engine, text):
+    print(f"Resposta: {text}")
+    engine.say(text)
+    engine.runAndWait()
+    engine.stop()  # Assegura que a fila de comandos está limpa
+
+def get_user_confirmation(engine, recognizer, source, info_type):
+    while True:
+        respond(engine, f"{info_type.capitalize()} entendido é {globals()[info_type]}. Esse é o seu {info_type}?")
+        response = listen_to_speech(recognizer, source)
+        if response:
+            if 'sim' in response:
+                break
+            elif 'não' in response or 'nao' in response:
+                respond(engine, f"Por favor, diga o seu {info_type} novamente.")
+                globals()[info_type] = listen_to_speech(recognizer, source)
+                if globals()[info_type] is None:
+                    respond(engine, "Não consegui entender, vamos tentar novamente.")
+                    continue
+        else:
+            respond(engine, "Não consegui entender, por favor repita.")
+
+def configuracao_inicial(recognizer, source, engine):
+    global nome_usuario, cidade_usuario
+
+    while nome_usuario is None:
+        respond(engine, "Por favor, diga o seu nome.")
+        nome_usuario = listen_to_speech(recognizer, source)
+        if nome_usuario:
+            get_user_confirmation(engine, recognizer, source, 'nome_usuario')
+        else:
+            respond(engine, "Não consegui entender, vamos tentar novamente.")
+
+def main():
+    recognizer = init_recognizer()
+    engine = init_engine()
+
+    respond(engine, "Olá! Eu me chamo Ayla, sua assistente virtual. Para começarmos, vamos configurar uma conta para você.")
+    configuração_inicial(recognizer, engine)
+
+    with sr.Microphone() as source:
+        while True:
+
+            command = listen_to_speech(recognizer, source)
+
+            if 'configuração' in command and 'inicial' in command:
+                configuracao_inicial(recognizer, source, engine)
+
+            elif 'quem' in command and 'sou' in command and 'eu' in command:
+                respond(engine, f"Você é {nome_usuario}")
+
+            elif 'adicione' in command and 'lista de compras' in command:
+                item = command.replace('adicione', '').replace('à lista de compras', '').strip()
+                resposta = adicionar_a_lista(item)
+                respond(engine, resposta)
+
+            elif 'limpar lista' in command:
+                resposta = limpar_lista()
+                respond(engine, resposta)
+
+            elif command:
+                respond(engine, command)
+
+            else:
+                respond(engine, "Não entendi, por favor repita.")
+
+if __name__ == "__main__":
+    main()
