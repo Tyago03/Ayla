@@ -3,7 +3,7 @@ import pyttsx3
 from datetime import date
 import datetime
 import requests
-
+# import openai
 
 # Variáveis
 nome_usuario = None
@@ -15,6 +15,7 @@ ds = date.weekday(data)
 dias = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
 meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 APIclima = "3fa1b2a2653d17190c4a1f574d8a259a"
+# APIopenai = "<chave>"
 
 def init_engine():
     engine = pyttsx3.init()
