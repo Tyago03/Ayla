@@ -28,6 +28,8 @@
 
 **Datas:**
 
-30/04: Entrrga do aplicativo finalizado.
+30/04: Entrega do aplicativo finalizado.
 
-07/05: 
+07/05: Recriação de uma parte do código Python, para melhor entendimento do software.
+
+14/05: 
