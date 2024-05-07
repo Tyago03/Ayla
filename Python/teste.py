@@ -1,9 +1,9 @@
 import speech_recognition as sr
 import pyttsx3
-import os
 from datetime import date
 import datetime
 import requests
+
 
 # Variáveis
 nome_usuario = None
@@ -95,7 +95,7 @@ def main():
     engine = init_engine()
 
     respond(engine, "Olá! Eu me chamo Ayla, sua assistente virtual. Para começarmos, vamos configurar uma conta para você.")
-    configuração_inicial(recognizer, engine)
+    configuracao_inicial(recognizer, engine)
 
     with sr.Microphone() as source:
         while True:
@@ -106,7 +106,7 @@ def main():
             if 'configuração' in command and 'inicial' in command:
                 configuracao_inicial(recognizer, source, engine)
 
-            # função cquem sou eu
+            # função quem sou eu
             elif 'quem' in command and 'sou' in command and 'eu' in command:
                 respond(engine, f"Você é {nome_usuario}")
 
@@ -120,30 +120,37 @@ def main():
                     engine.runAndWait()
 
             # função pegar data
-            elif ('qual dia' in frase or 'que dia' in frase) and 'hoje' in frase:
+            elif ('qual dia' in command or 'que dia' in command) and 'hoje' in command:
                 engine.say(f"Hoje é {dias[ds]}, dia {data.day} de {meses[data.month - 1]} de {data.year}")
                 engine.runAndWait()
 
             # função adicionar na lista de compras
-            elif 'adicione' in command and 'lista de compras' in command:
-                item = command.replace('adicione', '').replace('à lista de compras', '').strip()
-                resposta = adicionar_a_lista(item)
-                respond(engine, resposta)
+            if ('adiciona' in command or 'adicione' in command or 'coloca' in command or 'coloque' in command) and 'lista' in command and ('compras' in command or 'compra' in command):
+                item = command.replace('adiciona', '').replace('adicione', '').replace('coloca', '').replace('coloque', '').replace('lista', '').replace('compras', '').replace('compra', '').strip()
+                compras.append(item)
+                respond(engine, f"{item} adicionado à sua lista de compras.")
 
             # função limpar lista de compras
-            elif 'limpar lista' in command:
-                resposta = limpar_lista()
-                respond(engine, resposta)
+            elif ('limpar' in command or 'limpe' in command) and 'lista' in command and ('compra' in command or 'compras' in command):
+                compras.clear()
+                respond(engine, "Acabei de limpar sua lista de compras.")
 
             # função pegar temperatura e clima
-            elif 'qual'in command and ('temperatura' in command or 'clima in command'):
+            elif 'qual' in command and ('temperatura' in command or 'clima' in command):
                 cid = f"https://api.openweathermap.org/data/2.5/weather?q={cidade_usuario}&appid={APIclima}&lang=pt_br"
-                req = requests.get(cid)
-                dic = requests.get(cid).json()
-                temp = dic['main']['temp'] - 273.15
-                descr = dic['weather'][0]['description']
-                engine.say(f"A temperatura em {cidade_usuario} é de {round(temp, 0)} graus, e o clima é {descr}")
+                try:
+                    response = requests.get(cid)
+                    if response.status_code == 200:
+                        dic = response.json()
+                        temp = dic['main']['temp'] - 273.15
+                        descr = dic['weather'][0]['description']
+                        engine.say(f"A temperatura em {cidade_usuario} é de {round(temp, 0)} graus, e o clima é {descr}")
+                    else:
+                        engine.say("Houve um problema ao obter o clima.")
+                except requests.RequestException:
+                    engine.say("Erro ao acessar o serviço de clima.")
                 engine.runAndWait()
+
 
             elif command:
                 respond(engine, command)
