@@ -30,6 +30,6 @@
 
 30/04: Entrega do aplicativo finalizado.
 
-07/05: Recriação de uma parte do código Python, para melhor entendimento do software.
+14/05: Recriação de uma parte do código Python, para melhor entendimento do software.
 
-14/05: 
+ 
