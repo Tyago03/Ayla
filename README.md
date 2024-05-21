@@ -10,6 +10,7 @@
 - Controle de dispositivos inteligentes;
 - Personalização da Ayla pelo usuário;
 - Coseguir distinguir vozes diferentes (tentar);
+- Se o usuário disser "Ayla" enquanto ela fala, era ira parar e ouvirá o usuário;
 
 **A Melhorar:**
 - Criar uma função para a configuração inicial (recolher nome, reconhecimento de voz, localização atual...)
