@@ -4,12 +4,32 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 //Cores principais usadas:
 // Plano de fundo: #0E1315
 // Cor dos realces: #0DAD9E
 
-void main() => runApp(const MyApp());
+// A fazer:
+// - salvar foto de perfil
+// - arrumar a opção trocar email
+// - salvar alarmes
+// - configurar opção 'esqueci a senha'
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (Firebase.apps.isEmpty) {
+    // Verifica se não há instâncias já inicializadas.
+    await Firebase.initializeApp(
+        name: "dev project", options: DefaultFirebaseOptions.currentPlatform);
+  }
+  runApp(const MyApp());
+}
 
 // Variável global da NavBar
 int currentIndex = 0;
@@ -28,6 +48,16 @@ class _PerguntaAppState extends State<PerguntaApp> {
   //Variável salvar horário selecionado
   TimeOfDay selectedTime = TimeOfDay(hour: 0, minute: 0);
 
+  void _logout() async {
+    await FirebaseAuth.instance.signOut(); // Desloga o usuário
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+          builder: (context) =>
+              const LoginScreen()), // Redireciona para a tela de login
+    );
+  }
+
   // Função para selecionar tempo
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -36,22 +66,47 @@ class _PerguntaAppState extends State<PerguntaApp> {
     );
     if (picked != null && picked != selectedTime) {
       setState(() {
-        selectedTime = picked; // Agora usando setState corretamente
+        selectedTime = picked;
       });
     }
   }
 
-  //Nome do usuário
+  //Nome do Usuário
   String nomeUsuario = 'User';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userData = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      setState(() {
+        nomeUsuario = userData['nome'] ?? 'User';
+      });
+    }
+  }
 
   // Variável para armazenar a imagem selecionada
   XFile? _imageFile;
 
   // Método para alterar o nome do usuário
-  void _alterarNomeUsuario(String novoNome) {
-    setState(() {
-      nomeUsuario = novoNome.isNotEmpty ? novoNome : 'User';
-    });
+  void _alterarNomeUsuario(String novoNome) async {
+    if (novoNome.isNotEmpty && FirebaseAuth.instance.currentUser != null) {
+      String uid = FirebaseAuth.instance.currentUser!.uid;
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'nome': novoNome,
+      });
+      setState(() {
+        nomeUsuario = novoNome;
+      });
+    }
   }
 
   // Função para pegar a imagem da galeria ou câmera
@@ -238,11 +293,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
         ),
         const SizedBox(height: 50),
         TextButton(
-          onPressed: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
-            );
-          },
+          onPressed: _logout, // Chama o método de logout
           style: TextButton.styleFrom(
             foregroundColor: const Color(0xFF0DAD9E),
             textStyle: const TextStyle(decoration: TextDecoration.underline),
@@ -329,7 +380,6 @@ class _PerguntaAppState extends State<PerguntaApp> {
   //Sub-Aba Alterar Nome
   Widget _buildAlterarNome() {
     final TextEditingController _nomeController = TextEditingController();
-    final TextEditingController _sobrenomeController = TextEditingController();
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
@@ -376,7 +426,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 cursorColor: Colors.white,
                 obscureText: false,
                 decoration: InputDecoration(
-                  labelText: 'Novo Nome',
+                  labelText: 'Insira seu primeiro nome',
                   labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
                   border: OutlineInputBorder(),
                   enabledBorder: OutlineInputBorder(
@@ -390,25 +440,6 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 20),
-              TextField(
-                textCapitalization: TextCapitalization.sentences,
-                controller: _sobrenomeController,
-                cursorColor: Colors.white,
-                obscureText: false,
-                decoration: InputDecoration(
-                  labelText: 'Novo Sobrenome',
-                  labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
-                  border: OutlineInputBorder(),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF0DAD9E)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Color(0xFF0DAD9E), width: 2.0),
-                  ),
-                ),
-                style: TextStyle(color: Colors.white),
-              ),
               const SizedBox(height: 40),
               OutlinedButton(
                 onPressed: () {
@@ -431,12 +462,13 @@ class _PerguntaAppState extends State<PerguntaApp> {
     );
   }
 
-  //Sub-Aba Editar E-Mail
+// Sub-Aba Editar E-Mail
   Widget _buildEditarEmail() {
+    final TextEditingController _emailController = TextEditingController();
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
-        //Top Bar
         child: Container(
           decoration: const BoxDecoration(
             color: Color(0xFF0E1315),
@@ -474,9 +506,9 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 30),
-              const TextField(
+              TextField(
+                controller: _emailController,
                 cursorColor: Colors.white,
-                obscureText: false,
                 decoration: InputDecoration(
                   labelText: 'Novo E-Mail',
                   labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
@@ -492,27 +524,11 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 20),
-              const TextField(
-                cursorColor: Colors.white,
-                obscureText: false,
-                decoration: InputDecoration(
-                  labelText: 'Confirme o E-Mail',
-                  labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
-                  border: OutlineInputBorder(),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF0DAD9E)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Color(0xFF0DAD9E), width: 2.0),
-                  ),
-                ),
-                style: TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 40),
               OutlinedButton(
-                onPressed: () {
-                  Navigator.pop(context);
+                onPressed: () async {
+                  if (_emailController.text.isNotEmpty) {
+                    await _updateEmail(_emailController.text);
+                  }
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -530,12 +546,66 @@ class _PerguntaAppState extends State<PerguntaApp> {
     );
   }
 
-  //Sub-Aba Editar Senha
+  Future<void> _updateEmail(String newEmail) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null && newEmail.isNotEmpty) {
+      try {
+        // Reautenticação pode ser necessária aqui
+        var credential = EmailAuthProvider.credential(
+            email: user.email!, // email atual
+            password: "yourPasswordHere" // você precisa obter isso do usuário
+            );
+
+        await user.reauthenticateWithCredential(credential);
+
+        await user.updateEmail(newEmail);
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({'email': newEmail});
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("E-mail atualizado com sucesso!")),
+        );
+      } on FirebaseAuthException catch (e) {
+        String errorMessage = "Erro ao atualizar o e-mail.";
+        if (e.code == 'email-already-in-use') {
+          errorMessage = "O e-mail já está em uso.";
+        } else if (e.code == 'invalid-email') {
+          errorMessage = "O e-mail não é válido.";
+        } else if (e.code == 'requires-recent-login') {
+          errorMessage =
+              "Por favor, faça login novamente para atualizar seu e-mail.";
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Erro desconhecido: $e."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text("Por favor, insira um e-mail válido."),
+            backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  // Sub-Aba Editar Senha
   Widget _buildTrocarSenha() {
+    final TextEditingController _senhaController = TextEditingController();
+    final TextEditingController _confirmaSenhaController =
+        TextEditingController();
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
-        //Top Bar
         child: Container(
           decoration: const BoxDecoration(
             color: Color(0xFF0E1315),
@@ -573,7 +643,8 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 30),
-              const TextField(
+              TextField(
+                controller: _senhaController,
                 cursorColor: Colors.white,
                 obscureText: true, // Para entrada de senha
                 decoration: InputDecoration(
@@ -591,7 +662,8 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 20),
-              const TextField(
+              TextField(
+                controller: _confirmaSenhaController,
                 cursorColor: Colors.white,
                 obscureText: true, // Para repetir a entrada da senha
                 decoration: InputDecoration(
@@ -611,7 +683,18 @@ class _PerguntaAppState extends State<PerguntaApp> {
               const SizedBox(height: 40),
               OutlinedButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  if (_senhaController.text == _confirmaSenhaController.text) {
+                    _updatePassword(_senhaController.text);
+                    Navigator.pop(context);
+                  } else {
+                    // Mostrar erro de senha não coincidente
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("As senhas não coincidem."),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -627,6 +710,19 @@ class _PerguntaAppState extends State<PerguntaApp> {
         ),
       ),
     );
+  }
+
+  Future<void> _updatePassword(String newPassword) async {
+    if (FirebaseAuth.instance.currentUser != null) {
+      User user = FirebaseAuth.instance.currentUser!;
+      try {
+        await user.updatePassword(newPassword);
+        // Atualização bem-sucedida
+      } catch (e) {
+        print('Erro ao atualizar a senha: $e');
+        // Tratar erros como reautenticação necessária, etc.
+      }
+    }
   }
 
   // Aba Configurações
@@ -1214,22 +1310,48 @@ class _PegarLocalizacaoState extends State<PegarLocalizacao> {
   late GoogleMapController mapController;
   Set<Marker> markers = {};
 
-  final LatLng _center = const LatLng(-15.793889, -47.882778);
-
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
-    _updateMarker(_center);
+    _loadUserLocation(); // Chama a função para carregar a localização
+  }
+
+  void _loadUserLocation() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      if (userDoc.exists) {
+        var data =
+            userDoc.data() as Map<String, dynamic>; // Fazemos o cast aqui.
+        if (data.containsKey('cep')) {
+          String cep = data['cep'];
+          _getCoordinatesFromCEP(cep); // Converte CEP em coordenadas
+        }
+      }
+    }
+  }
+
+  Future<void> _getCoordinatesFromCEP(String cep) async {
+    var response = await http.get(Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?address=$cep&key=AIzaSyBnEMFheAW0dZNckqKMEl0WRVP7RuewGw4'));
+    var data = jsonDecode(response.body);
+    if (data['results'].isNotEmpty) {
+      var coordinates = data['results'][0]['geometry']['location'];
+      LatLng newLocation = LatLng(coordinates['lat'], coordinates['lng']);
+      _updateMarker(newLocation);
+      mapController.moveCamera(CameraUpdate.newLatLng(newLocation));
+    }
   }
 
   void _updateMarker(LatLng newLocation) {
     setState(() {
       markers.clear();
-      markers.add(
-        Marker(
-          markerId: const MarkerId('selectedLocation'),
-          position: newLocation,
-        ),
-      );
+      markers.add(Marker(
+        markerId: const MarkerId('selectedLocation'),
+        position: newLocation,
+      ));
     });
   }
 
@@ -1240,11 +1362,11 @@ class _PegarLocalizacaoState extends State<PegarLocalizacao> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            currentIndex = 2;
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const PerguntaApp()),
-            );
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) {
+              currentIndex = 2;
+              return PerguntaApp();
+            }));
           },
         ),
         title: Text(
@@ -1254,47 +1376,14 @@ class _PegarLocalizacaoState extends State<PegarLocalizacao> {
         backgroundColor: Color(0xFF0E1315),
         centerTitle: true,
         elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(4.0),
-          child: Container(
-            color: Color(0xFF0DAD9E),
-            height: 4.0,
-          ),
-        ),
       ),
       body: GoogleMap(
         onMapCreated: _onMapCreated,
-        onTap: _updateMarker, // Atualiza o marcador quando o mapa é clicado
-        initialCameraPosition: CameraPosition(target: _center, zoom: 11.0),
+        initialCameraPosition: CameraPosition(
+          target: LatLng(-15.793889, -47.882778), // Coordenada inicial padrão
+          zoom: 15.0,
+        ),
         markers: markers,
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Color(0xFF0E1315),
-          border: Border(
-            top: BorderSide(color: Color(0xFF0DAD9E), width: 4.0),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: OutlinedButton(
-            onPressed: () {
-              currentIndex = 2;
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const PerguntaApp()),
-              );
-            },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: Colors.white.withOpacity(0.1),
-              side: BorderSide(color: Colors.white, width: 2),
-              textStyle: GoogleFonts.josefinSans(fontSize: 20),
-              minimumSize: Size(240, 48),
-            ),
-            child: const Text('Concluído'),
-          ),
-        ),
       ),
     );
   }
@@ -1360,7 +1449,13 @@ class RegistrationCompletePage extends StatelessWidget {
 
 // Guia de Cadastro
 class RegisterPage extends StatelessWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController senhaController = TextEditingController();
+  final TextEditingController repetirSenhaController = TextEditingController();
+  final TextEditingController nomeController = TextEditingController();
+  final TextEditingController cepController = TextEditingController();
+
+  RegisterPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -1390,10 +1485,11 @@ class RegisterPage extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
-              const TextField(
+              TextField(
+                controller: nomeController,
                 cursorColor: Colors.white,
                 decoration: InputDecoration(
-                  labelText: 'Nome completo',
+                  labelText: 'Primeiro Nome',
                   labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
                   border: OutlineInputBorder(),
                   enabledBorder: OutlineInputBorder(
@@ -1408,7 +1504,8 @@ class RegisterPage extends StatelessWidget {
                 textCapitalization: TextCapitalization.words,
               ),
               const SizedBox(height: 20),
-              const TextField(
+              TextField(
+                controller: emailController,
                 cursorColor: Colors.white,
                 decoration: InputDecoration(
                   labelText: 'E-mail',
@@ -1432,7 +1529,7 @@ class RegisterPage extends StatelessWidget {
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(
-                      9), // Garante que só temos espaço para 8 dígitos e 1 hífen
+                      8), // Garante que só temos espaço para 8 dígitos e 1 hífen
                 ],
                 decoration: InputDecoration(
                   labelText: 'CEP',
@@ -1465,7 +1562,8 @@ class RegisterPage extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 20),
-              const TextField(
+              TextField(
+                controller: senhaController,
                 cursorColor: Colors.white,
                 obscureText: true, // Para entrada de senha
                 decoration: InputDecoration(
@@ -1483,7 +1581,8 @@ class RegisterPage extends StatelessWidget {
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 20),
-              const TextField(
+              TextField(
+                controller: repetirSenhaController,
                 cursorColor: Colors.white,
                 obscureText: true, // Para repetir a entrada da senha
                 decoration: InputDecoration(
@@ -1502,12 +1601,45 @@ class RegisterPage extends StatelessWidget {
               ),
               const SizedBox(height: 40),
               OutlinedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const RegistrationCompletePage()),
-                  );
+                onPressed: () async {
+                  if (senhaController.text != repetirSenhaController.text) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("As senhas não coincidem."),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  try {
+                    UserCredential userCredential = await FirebaseAuth.instance
+                        .createUserWithEmailAndPassword(
+                      email: emailController.text,
+                      password: senhaController.text,
+                    );
+                    User? user = userCredential.user;
+                    await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user!.uid)
+                        .set({
+                      'nome': nomeController.text,
+                      'cep': cepController.text,
+                    });
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const RegistrationCompletePage()),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Erro ao registrar: ${e.toString()}"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -1517,7 +1649,7 @@ class RegisterPage extends StatelessWidget {
                   minimumSize: Size(240, 48),
                 ),
                 child: const Text('Avançar'),
-              ),
+              )
             ],
           ),
         ),
@@ -1792,13 +1924,56 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
               OutlinedButton(
-                onPressed: () {
-                  currentIndex = 0;
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const PerguntaApp()),
-                  );
+                onPressed: () async {
+                  if (emailController.text.isEmpty ||
+                      passwordController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Por favor, insira seu e-mail e senha.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return; // Impede a execução adicional se os campos estiverem vazios
+                  }
+
+                  try {
+                    // Tentativa de login com o FirebaseAuth
+                    UserCredential userCredential =
+                        await FirebaseAuth.instance.signInWithEmailAndPassword(
+                      email: emailController.text,
+                      password: passwordController.text,
+                    );
+
+                    // Navegação para a página principal só ocorre após o sucesso do login
+                    currentIndex = 0;
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const PerguntaApp()),
+                    );
+                  } on FirebaseAuthException catch (e) {
+                    String errorMessage = 'Email ou Senha inválidos.';
+                    if (e.code == 'user-not-found') {
+                      errorMessage =
+                          'Nenhum usuário encontrado para esse e-mail.';
+                    } else if (e.code == 'wrong-password') {
+                      errorMessage = 'Senha incorreta.';
+                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(errorMessage),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  } catch (e) {
+                    // Tratar quaisquer outros erros que possam ocorrer
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Erro de login: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -1842,8 +2017,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) => const RegisterPage()),
+                    MaterialPageRoute(builder: (context) => RegisterPage()),
                   );
                 },
                 style: OutlinedButton.styleFrom(
@@ -1859,7 +2033,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
-      backgroundColor: const Color(0xFF0E1315), // Cor de fundo do Scaffold
+      backgroundColor: const Color(0xFF0E1315),
     );
   }
 }
