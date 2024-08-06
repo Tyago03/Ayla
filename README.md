@@ -12,7 +12,6 @@
 
 **A Melhorar**
 - Mudar as telas de selecionar horario e selecionar imagem para escuras.
-- Salvar foto de perfil no banco;
 - Se o usuário disser "Ayla" enquanto ela fala, era ira parar e ouvirá o usuário;
 
 
