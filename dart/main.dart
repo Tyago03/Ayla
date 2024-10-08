@@ -10,6 +10,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:flutter_tts/flutter_tts.dart';
 
 //Cores principais usadas:
 // Plano de fundo: #0E1315
@@ -47,6 +49,18 @@ class PerguntaApp extends StatefulWidget {
 class _PerguntaAppState extends State<PerguntaApp> {
   //Variável salvar horário selecionado
   TimeOfDay selectedTime = TimeOfDay(hour: 0, minute: 0);
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _text = "Pressione o ícone do microfone para falar";
+  late FlutterTts flutterTts;
+
+  @override
+  void initState() {
+    super.initState();
+    _speech = stt.SpeechToText();
+    _loadUserName();
+    flutterTts = FlutterTts();
+  }
 
   void _logout() async {
     await FirebaseAuth.instance.signOut(); // Desloga o usuário
@@ -58,7 +72,6 @@ class _PerguntaAppState extends State<PerguntaApp> {
     );
   }
 
-  // Função para selecionar tempo
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -71,14 +84,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
     }
   }
 
-  //Nome do Usuário
   String nomeUsuario = 'User';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserName();
-  }
 
   Future<void> _loadUserName() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -93,10 +99,8 @@ class _PerguntaAppState extends State<PerguntaApp> {
     }
   }
 
-  // Variável para armazenar a imagem selecionada
   XFile? _imageFile;
 
-  // Método para alterar o nome do usuário
   void _alterarNomeUsuario(String novoNome) async {
     if (novoNome.isNotEmpty && FirebaseAuth.instance.currentUser != null) {
       String uid = FirebaseAuth.instance.currentUser!.uid;
@@ -109,7 +113,6 @@ class _PerguntaAppState extends State<PerguntaApp> {
     }
   }
 
-  // Função para pegar a imagem da galeria ou câmera
   Future<void> _pickImage(ImageSource source) async {
     try {
       final pickedFile = await ImagePicker().pickImage(source: source);
@@ -117,14 +120,13 @@ class _PerguntaAppState extends State<PerguntaApp> {
         setState(() {
           _imageFile = pickedFile;
         });
+        Navigator.pop(context); // Volta para a tela anterior (Perfil)
       }
     } catch (e) {
-      // Lidar com exceções
       print('Erro ao pegar a imagem: $e');
     }
   }
 
-  // Widget para mostrar a imagem selecionada ou o ícone padrão
   Widget _buildImage() {
     if (_imageFile == null) {
       return Icon(Icons.person, size: 120, color: Colors.white);
@@ -135,8 +137,8 @@ class _PerguntaAppState extends State<PerguntaApp> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: Color(0xFF0DAD9E), // Cor dos realces
-            width: 4, // Espessura da borda
+            color: Color(0xFF0DAD9E),
+            width: 4,
           ),
         ),
         child: ClipOval(
@@ -151,10 +153,8 @@ class _PerguntaAppState extends State<PerguntaApp> {
     }
   }
 
-  // Itens da NavBar
   final List<String> _titles = const ['Início', 'Perfil', 'Configurações'];
 
-  // itens das SubAbas
   final List<String> abas = const [
     'Alterar foto',
     'Alterar nome',
@@ -166,9 +166,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
     'Editar Localização'
   ];
 
-  // Guia Principal
   Widget _buildInicioPage() {
-    // Aba Início
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.start,
@@ -180,7 +178,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
         ),
         const SizedBox(height: 50),
         Text(
-          'Olá, $nomeUsuario', // Usa a variável de estado aqui
+          'Olá, $nomeUsuario',
           style: GoogleFonts.josefinSans(fontSize: 30, color: Colors.white),
         ),
         const SizedBox(height: 20),
@@ -199,28 +197,99 @@ class _PerguntaAppState extends State<PerguntaApp> {
             icon: const Icon(Icons.mic),
             iconSize: 60,
             color: Colors.white,
-            onPressed: () {
-              // Ação botão de voz
-            },
+            onPressed: _listen,
           ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          _text,
+          style: TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
-  // Aba Perfil
+  void _listen() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) {
+          print('onStatus: $val');
+          if (val == 'notListening') {
+            setState(() => _isListening = false);
+          }
+        },
+        onError: (val) {
+          print('onError: $val');
+          setState(() => _isListening = false);
+        },
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _text = val.recognizedWords;
+            if (val.hasConfidenceRating && val.confidence > 0) {
+              _sendCommand(_text);
+            }
+          }),
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
+  }
+
+  Future<void> _sendCommand(String command) async {
+    final response = await http.post(
+      Uri.parse(
+          'http://192.168.0.4:8000/command/'), // substitua pelo IP do seu computador
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'text': command,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final result = jsonDecode(utf8.decode(response.bodyBytes));
+      setState(() {
+        _text = result['message']; // Atualiza o texto com a resposta do FastAPI
+      });
+      await flutterTts.speak(_text); // Converte a resposta em voz
+    } else {
+      setState(() {
+        _text = 'Erro ao processar o comandinho';
+      });
+      await flutterTts.speak(_text); // Converte a mensagem de erro em voz
+    }
+  }
+
   Widget _buildPerfilPage() {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 120,
-          height: 120,
+          width: 140, // Um pouco maior para acomodar o círculo branco
+          height: 140, // Um pouco maior para acomodar o círculo branco
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.transparent,
+            border: Border.all(
+              color: Colors.white, // Apenas o círculo branco
+              width: 0, // Tamanho da borda branca
+            ),
           ),
-          child: _buildImage(),
+          child: Container(
+            width: 120, // Tamanho original do ícone de perfil
+            height: 120, // Tamanho original do ícone de perfil
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.transparent,
+            ),
+            child: _buildImage(), // Ícone ou foto de perfil escolhida
+          ),
         ),
         const SizedBox(height: 25),
         Text(
@@ -305,7 +374,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
     );
   }
 
-  //Sub-Aba Alterar Foto
+// Sub-Aba Alterar Foto
   Widget _buildAlterarFoto() {
     return Scaffold(
       appBar: AppBar(
@@ -330,32 +399,44 @@ class _PerguntaAppState extends State<PerguntaApp> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             InkWell(
-              onTap: () async {
-                // Mostra um diálogo para escolher a câmera ou galeria
-                var source = await showDialog<ImageSource>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text("Escolha a origem da foto"),
-                    actions: [
-                      TextButton(
-                        onPressed: () =>
-                            Navigator.pop(context, ImageSource.camera),
-                        child: Text("Câmera"),
-                      ),
-                      TextButton(
-                        onPressed: () =>
-                            Navigator.pop(context, ImageSource.gallery),
-                        child: Text("Galeria"),
-                      ),
-                    ],
-                  ),
-                );
-                if (source != null) {
-                  await _pickImage(source);
-                  Navigator.pop(context);
-                }
+              onTap: () {
+                _showPhotoOptionsDialog(context); // Exibe o pop-up de opções
               },
-              child: _buildImage(), // Mostra a imagem ou o ícone padrão
+              child: Stack(
+                children: [
+                  // Ícone de perfil com círculo ao redor
+                  Container(
+                    width: 140,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white, // Círculo branco ao redor
+                        width: 4,
+                      ),
+                    ),
+                    child: _buildImage(), // Mostra a imagem ou o ícone padrão
+                  ),
+                  // Ícone de "+" no canto inferior direito
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFF0DAD9E), // Cor de fundo do botão "+"
+                      ),
+                      padding:
+                          EdgeInsets.all(8), // Ajusta o espaço ao redor do "+"
+                      child: Icon(
+                        Icons.add, // Ícone de "+"
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 60),
             OutlinedButton(
@@ -375,6 +456,41 @@ class _PerguntaAppState extends State<PerguntaApp> {
         ),
       ),
     );
+  }
+
+// Função para mostrar opções de foto, incluindo remover foto se já houver uma
+  Future<void> _showPhotoOptionsDialog(BuildContext context) async {
+    var source = await showDialog<ImageSource>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Escolha a origem da foto"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, ImageSource.camera),
+            child: Text("Câmera"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, ImageSource.gallery),
+            child: Text("Galeria"),
+          ),
+          if (_imageFile !=
+              null) // Apenas exibe essa opção se houver uma foto selecionada
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _imageFile = null; // Remove a foto
+                });
+                Navigator.pop(context); // Fecha o diálogo
+                Navigator.pop(context); // Volta para a tela de perfil
+              },
+              child: Text("Remover foto"),
+            ),
+        ],
+      ),
+    );
+    if (source != null) {
+      await _pickImage(source); // Escolha de imagem, já faz o pop ao concluir
+    }
   }
 
   //Sub-Aba Alterar Nome
@@ -526,6 +642,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
               const SizedBox(height: 20),
               OutlinedButton(
                 onPressed: () async {
+                  Navigator.pop(context);
                   if (_emailController.text.isNotEmpty) {
                     await _updateEmail(_emailController.text);
                   }
@@ -559,13 +676,19 @@ class _PerguntaAppState extends State<PerguntaApp> {
         await user.reauthenticateWithCredential(credential);
 
         await user.updateEmail(newEmail);
+
+        // Envia um e-mail de verificação para o novo e-mail
+        await user.sendEmailVerification();
+
         await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .update({'email': newEmail});
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("E-mail atualizado com sucesso!")),
+          SnackBar(
+              content:
+                  Text("E-mail atualizado com sucesso! Verifique seu e-mail.")),
         );
       } on FirebaseAuthException catch (e) {
         String errorMessage = "Erro ao atualizar o e-mail.";
@@ -717,10 +840,23 @@ class _PerguntaAppState extends State<PerguntaApp> {
       User user = FirebaseAuth.instance.currentUser!;
       try {
         await user.updatePassword(newPassword);
-        // Atualização bem-sucedida
+
+        // Envia um e-mail de confirmação para o usuário
+        await FirebaseAuth.instance.sendPasswordResetEmail(email: user.email!);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  "Senha atualizada com sucesso. Verifique seu e-mail para confirmar!")),
+        );
       } catch (e) {
         print('Erro ao atualizar a senha: $e');
-        // Tratar erros como reautenticação necessária, etc.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Erro ao atualizar a senha. Tente novamente."),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -1298,7 +1434,7 @@ class _AdicionarAlarmesState extends State<AdicionarAlarmes> {
   }
 }
 
-// Guia Localização
+// Guia Localização com Barra de Pesquisa com fundo personalizado e sem áreas brancas
 class PegarLocalizacao extends StatefulWidget {
   const PegarLocalizacao({super.key});
 
@@ -1309,12 +1445,14 @@ class PegarLocalizacao extends StatefulWidget {
 class _PegarLocalizacaoState extends State<PegarLocalizacao> {
   late GoogleMapController mapController;
   Set<Marker> markers = {};
+  final TextEditingController _searchController = TextEditingController();
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
     _loadUserLocation(); // Chama a função para carregar a localização
   }
 
+  // Carrega a localização do usuário com base no CEP salvo no Firestore
   void _loadUserLocation() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -1323,8 +1461,7 @@ class _PegarLocalizacaoState extends State<PegarLocalizacao> {
           .doc(user.uid)
           .get();
       if (userDoc.exists) {
-        var data =
-            userDoc.data() as Map<String, dynamic>; // Fazemos o cast aqui.
+        var data = userDoc.data() as Map<String, dynamic>;
         if (data.containsKey('cep')) {
           String cep = data['cep'];
           _getCoordinatesFromCEP(cep); // Converte CEP em coordenadas
@@ -1333,9 +1470,10 @@ class _PegarLocalizacaoState extends State<PegarLocalizacao> {
     }
   }
 
-  Future<void> _getCoordinatesFromCEP(String cep) async {
+  // Obtém as coordenadas a partir do CEP ou endereço
+  Future<void> _getCoordinatesFromCEP(String address) async {
     var response = await http.get(Uri.parse(
-        'https://maps.googleapis.com/maps/api/geocode/json?address=$cep&key=AIzaSyBnEMFheAW0dZNckqKMEl0WRVP7RuewGw4'));
+        'https://maps.googleapis.com/maps/api/geocode/json?address=$address&key=AIzaSyBnEMFheAW0dZNckqKMEl0WRVP7RuewGw4'));
     var data = jsonDecode(response.body);
     if (data['results'].isNotEmpty) {
       var coordinates = data['results'][0]['geometry']['location'];
@@ -1345,6 +1483,7 @@ class _PegarLocalizacaoState extends State<PegarLocalizacao> {
     }
   }
 
+  // Atualiza o marcador no mapa
   void _updateMarker(LatLng newLocation) {
     setState(() {
       markers.clear();
@@ -1353,6 +1492,14 @@ class _PegarLocalizacaoState extends State<PegarLocalizacao> {
         position: newLocation,
       ));
     });
+  }
+
+  // Ação de pesquisa ao pressionar o botão de pesquisa
+  void _onSearch() {
+    String searchQuery = _searchController.text;
+    if (searchQuery.isNotEmpty) {
+      _getCoordinatesFromCEP(searchQuery);
+    }
   }
 
   @override
@@ -1377,13 +1524,58 @@ class _PegarLocalizacaoState extends State<PegarLocalizacao> {
         centerTitle: true,
         elevation: 0,
       ),
-      body: GoogleMap(
-        onMapCreated: _onMapCreated,
-        initialCameraPosition: CameraPosition(
-          target: LatLng(-15.793889, -47.882778), // Coordenada inicial padrão
-          zoom: 15.0,
-        ),
-        markers: markers,
+      body: Column(
+        children: [
+          // Barra de pesquisa sem áreas brancas
+          Container(
+            color:
+                Color(0xFF0E1315), // Cor de fundo externa da barra de pesquisa
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    cursorColor: Colors.white,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor:
+                          Color(0xFF0E1315), // Cor interna da barra de pesquisa
+                      hintText: 'Pesquisar por CEP ou endereço...',
+                      hintStyle: TextStyle(color: Colors.white70),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF0DAD9E)),
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Color(0xFF0DAD9E), width: 2.0),
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
+                    ),
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.search, color: Color(0xFF0DAD9E)),
+                  onPressed: _onSearch,
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: GoogleMap(
+              onMapCreated: _onMapCreated,
+              initialCameraPosition: CameraPosition(
+                target:
+                    LatLng(-15.793889, -47.882778), // Coordenada inicial padrão
+                zoom: 15.0,
+              ),
+              markers: markers,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1839,15 +2031,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // Tela de login
     return Scaffold(
-      body: Center(
+      resizeToAvoidBottomInset:
+          false, // Adicionado para desativar a adaptação automática ao teclado
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
+              const SizedBox(height: 80),
               Container(
                 width: 1300,
-                height: 100,
+                height: 80,
                 child: Image.asset('assets/images/aylabrancoc.png'),
               ),
               Text(
