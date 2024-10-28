@@ -21,7 +21,6 @@ import 'package:flutter_tts/flutter_tts.dart';
 // - salvar foto de perfil
 // - arrumar a opção trocar email
 // - salvar alarmes
-// - configurar opção 'esqueci a senha'
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -578,31 +577,19 @@ class _PerguntaAppState extends State<PerguntaApp> {
     );
   }
 
-// Sub-Aba Editar E-Mail
   Widget _buildEditarEmail() {
     final TextEditingController _emailController = TextEditingController();
+    final TextEditingController _senhaController =
+        TextEditingController(); // Para reautenticar
 
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF0E1315),
-            border: Border(
-              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 4.0),
-            ),
-          ),
-          child: AppBar(
-            iconTheme: IconThemeData(color: Colors.white),
-            title: Text(
-              'Alterar E-Mail',
-              style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
-            ),
-            backgroundColor: Colors.transparent,
-            centerTitle: true,
-            elevation: 0,
-          ),
-        ),
+      appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
+        title: Text('Alterar E-Mail',
+            style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28)),
+        backgroundColor: Color(0xFF0E1315),
+        centerTitle: true,
+        elevation: 0,
       ),
       backgroundColor: const Color(0xFF0E1315),
       body: SingleChildScrollView(
@@ -640,12 +627,29 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 style: TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 20),
+              TextField(
+                controller: _senhaController,
+                cursorColor: Colors.white,
+                obscureText: true, // Campo de senha para reautenticação
+                decoration: InputDecoration(
+                  labelText: 'Senha atual',
+                  labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
+                  border: OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF0DAD9E)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Color(0xFF0DAD9E), width: 2.0),
+                  ),
+                ),
+                style: TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 20),
               OutlinedButton(
                 onPressed: () async {
-                  Navigator.pop(context);
-                  if (_emailController.text.isNotEmpty) {
-                    await _updateEmail(_emailController.text);
-                  }
+                  await _updateEmail(
+                      _emailController.text, _senhaController.text);
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -654,7 +658,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
                   textStyle: GoogleFonts.josefinSans(fontSize: 20),
                   minimumSize: Size(240, 48),
                 ),
-                child: const Text('Concluído'),
+                child: const Text('Alterar E-mail'),
               ),
             ],
           ),
@@ -663,42 +667,40 @@ class _PerguntaAppState extends State<PerguntaApp> {
     );
   }
 
-  Future<void> _updateEmail(String newEmail) async {
+  Future<void> _updateEmail(String newEmail, String senha) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null && newEmail.isNotEmpty) {
       try {
-        // Reautenticação pode ser necessária aqui
-        var credential = EmailAuthProvider.credential(
-            email: user.email!, // email atual
-            password: "yourPasswordHere" // você precisa obter isso do usuário
-            );
-
+        // Reautenticar o usuário
+        AuthCredential credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: senha,
+        );
         await user.reauthenticateWithCredential(credential);
 
+        // Atualizar o e-mail
         await user.updateEmail(newEmail);
 
-        // Envia um e-mail de verificação para o novo e-mail
-        await user.sendEmailVerification();
-
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .update({'email': newEmail});
+        // Notificar o usuário por e-mail (simulação)
+        // Aqui você pode usar o Firebase Functions ou outro serviço para enviar o e-mail
+        // Em um ambiente real, você configuraria isso no backend
+        await sendEmailNotification(newEmail);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content:
-                  Text("E-mail atualizado com sucesso! Verifique seu e-mail.")),
+          SnackBar(content: Text("E-mail atualizado com sucesso")),
         );
+
+        // Navegar de volta para a tela anterior após o sucesso
+        Navigator.pop(
+            context); // Envia o usuário de volta para a página anterior
       } on FirebaseAuthException catch (e) {
-        String errorMessage = "Erro ao atualizar o e-mail.";
-        if (e.code == 'email-already-in-use') {
+        String errorMessage = "Erro ao alterar o e-mail.";
+        if (e.code == 'requires-recent-login') {
+          errorMessage = "Por favor, faça login novamente para continuar.";
+        } else if (e.code == 'email-already-in-use') {
           errorMessage = "O e-mail já está em uso.";
         } else if (e.code == 'invalid-email') {
-          errorMessage = "O e-mail não é válido.";
-        } else if (e.code == 'requires-recent-login') {
-          errorMessage =
-              "Por favor, faça login novamente para atualizar seu e-mail.";
+          errorMessage = "E-mail inválido.";
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
@@ -711,42 +713,25 @@ class _PerguntaAppState extends State<PerguntaApp> {
           ),
         );
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text("Por favor, insira um e-mail válido."),
-            backgroundColor: Colors.red),
-      );
     }
+  }
+
+  Future<void> sendEmailNotification(String email) async {
+    // Aqui você integraria o serviço de envio de e-mail
+    // Pode usar Firebase Functions ou algum serviço de terceiros como SendGrid, Mailgun etc.
+    print("E-mail de confirmação enviado para $email");
   }
 
   // Sub-Aba Editar Senha
   Widget _buildTrocarSenha() {
-    final TextEditingController _senhaController = TextEditingController();
-    final TextEditingController _confirmaSenhaController =
-        TextEditingController();
-
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF0E1315),
-            border: Border(
-              bottom: BorderSide(color: Color(0xFF0DAD9E), width: 4.0),
-            ),
-          ),
-          child: AppBar(
-            iconTheme: IconThemeData(color: Colors.white),
-            title: Text(
-              'Alterar Senha',
-              style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28),
-            ),
-            backgroundColor: Colors.transparent,
-            centerTitle: true,
-            elevation: 0,
-          ),
-        ),
+      appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
+        title: Text('Alterar Senha',
+            style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28)),
+        backgroundColor: Color(0xFF0E1315),
+        centerTitle: true,
+        elevation: 0,
       ),
       backgroundColor: const Color(0xFF0E1315),
       body: SingleChildScrollView(
@@ -766,58 +751,10 @@ class _PerguntaAppState extends State<PerguntaApp> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 30),
-              TextField(
-                controller: _senhaController,
-                cursorColor: Colors.white,
-                obscureText: true, // Para entrada de senha
-                decoration: InputDecoration(
-                  labelText: 'Nova Senha',
-                  labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
-                  border: OutlineInputBorder(),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF0DAD9E)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Color(0xFF0DAD9E), width: 2.0),
-                  ),
-                ),
-                style: TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _confirmaSenhaController,
-                cursorColor: Colors.white,
-                obscureText: true, // Para repetir a entrada da senha
-                decoration: InputDecoration(
-                  labelText: 'Confirme a Senha',
-                  labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
-                  border: OutlineInputBorder(),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF0DAD9E)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Color(0xFF0DAD9E), width: 2.0),
-                  ),
-                ),
-                style: TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 40),
               OutlinedButton(
-                onPressed: () {
-                  if (_senhaController.text == _confirmaSenhaController.text) {
-                    _updatePassword(_senhaController.text);
-                    Navigator.pop(context);
-                  } else {
-                    // Mostrar erro de senha não coincidente
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("As senhas não coincidem."),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
+                onPressed: () async {
+                  await _sendPasswordResetEmail();
+                  Navigator.pop(context);
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -826,7 +763,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
                   textStyle: GoogleFonts.josefinSans(fontSize: 20),
                   minimumSize: Size(240, 48),
                 ),
-                child: const Text('Concluído'),
+                child: const Text('Enviar Link de Redefinição'),
               ),
             ],
           ),
@@ -835,25 +772,24 @@ class _PerguntaAppState extends State<PerguntaApp> {
     );
   }
 
-  Future<void> _updatePassword(String newPassword) async {
-    if (FirebaseAuth.instance.currentUser != null) {
-      User user = FirebaseAuth.instance.currentUser!;
+// Função para enviar o e-mail de redefinição de senha
+  Future<void> _sendPasswordResetEmail() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
       try {
-        await user.updatePassword(newPassword);
-
-        // Envia um e-mail de confirmação para o usuário
         await FirebaseAuth.instance.sendPasswordResetEmail(email: user.email!);
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(
-                  "Senha atualizada com sucesso. Verifique seu e-mail para confirmar!")),
+                  "Link de redefinição de senha enviado para ${user.email}. Verifique seu e-mail.")),
         );
       } catch (e) {
-        print('Erro ao atualizar a senha: $e');
+        print('Erro ao enviar o e-mail de redefinição: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Erro ao atualizar a senha. Tente novamente."),
+            content:
+                Text("Erro ao enviar o link de redefinição. Tente novamente."),
             backgroundColor: Colors.red,
           ),
         );
