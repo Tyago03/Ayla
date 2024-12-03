@@ -13,7 +13,3 @@
 **A Melhorar**
 - Mudar as telas de selecionar horario e selecionar imagem para escuras.
 - Se o usuário disser "Ayla" enquanto ela fala, era ira parar e ouvirá o usuário;
-
-
-**Datas:**
-- 06/08: Polimento do aplicativo
