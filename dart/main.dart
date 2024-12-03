@@ -83,6 +83,18 @@ class _PerguntaAppState extends State<PerguntaApp> {
     }
   }
 
+  Future<void> _salvarAlarme(String nome, TimeOfDay horario) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Cria um documento com um ID gerado automaticamente na coleção 'alarmes'
+      await FirebaseFirestore.instance.collection('alarmes').add({
+        'uid': user.uid, // Associa o alarme ao usuário
+        'nome': nome,
+        'horario': "${horario.hour}:${horario.minute}",
+      });
+    }
+  }
+
   String nomeUsuario = 'User';
 
   Future<void> _loadUserName() async {
@@ -243,7 +255,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
   Future<void> _sendCommand(String command) async {
     final response = await http.post(
       Uri.parse(
-          'http://192.168.0.4:8000/command/'), // substitua pelo IP do seu computador
+          'https://7475-2804-14c-6591-48b4-7d8f-a1f5-b48-38ee.ngrok-free.app/command/'), // substitua pelo IP do seu computador
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -260,7 +272,7 @@ class _PerguntaAppState extends State<PerguntaApp> {
       await flutterTts.speak(_text); // Converte a resposta em voz
     } else {
       setState(() {
-        _text = 'Erro ao processar o comandinho';
+        _text = 'Erro ao processar o comando';
       });
       await flutterTts.speak(_text); // Converte a mensagem de erro em voz
     }
@@ -855,12 +867,13 @@ class _PerguntaAppState extends State<PerguntaApp> {
           onPressed: () {
             Navigator.of(context).pushReplacement(MaterialPageRoute(
               builder: (context) => EditarAlarmes(
-                  alarmes: alarmes,
-                  onAlarmesUpdated: () {
-                    setState(() {});
-                  }),
+                onAlarmesUpdated: () {
+                  setState(() {});
+                },
+              ),
             ));
           },
+
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.white,
             backgroundColor: Colors.white.withOpacity(0.1),
@@ -1142,11 +1155,9 @@ class _PerguntaAppState extends State<PerguntaApp> {
 
 //Guia Editar Alarmes
 class EditarAlarmes extends StatefulWidget {
-  final List<String> alarmes;
   final VoidCallback onAlarmesUpdated;
 
-  const EditarAlarmes(
-      {Key? key, required this.alarmes, required this.onAlarmesUpdated})
+  const EditarAlarmes({Key? key, required this.onAlarmesUpdated})
       : super(key: key);
 
   @override
@@ -1154,6 +1165,32 @@ class EditarAlarmes extends StatefulWidget {
 }
 
 class _EditarAlarmesPageState extends State<EditarAlarmes> {
+  List<String> alarmes = []; // Lista de alarmes
+
+  // Função para carregar alarmes do Firebase
+  Future<void> _carregarAlarmes() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('alarmes')
+          .where('uid', isEqualTo: user.uid)
+          .get();
+
+      setState(() {
+        alarmes = snapshot.docs.map((doc) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          return "${data['nome']} - ${data['horario']}";
+        }).toList();
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarAlarmes(); // Carrega os alarmes do Firebase ao iniciar
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1184,64 +1221,322 @@ class _EditarAlarmesPageState extends State<EditarAlarmes> {
         ),
       ),
       backgroundColor: const Color(0xFF0E1315),
-      floatingActionButton: Container(
-        margin: EdgeInsets.only(bottom: 80),
-        child: SizedBox(
-          width: 70,
-          height: 70,
-          child: FloatingActionButton(
-            onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const AdicionarAlarmes()));
-            },
-            child: Icon(
-              Icons.add,
-              size: 40,
-              color: Color(0xFF0E1315),
-            ),
-            backgroundColor: Color(0xFF0DAD9E),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-          ),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       body: Center(
-          child: alarmes.isEmpty
-              ? Text(
-                  "Nenhum alarme configurado.",
-                  style: GoogleFonts.josefinSans(
-                      fontSize: 20, color: Colors.white),
-                )
-              : ListView.builder(
-                  itemCount: alarmes.length,
-                  itemBuilder: (context, index) {
-                    return Column(
-                      children: [
-                        ListTile(
-                          leading: Icon(Icons.alarm, color: Colors.white),
-                          title: Text(
-                            alarmes[index].split(" - ")[0],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white, fontSize: 24),
-                          ),
-                          trailing: Text(
-                            alarmes[index].split(" - ")[1],
+        child: alarmes.isEmpty
+            ? Text(
+                "Nenhum alarme configurado.",
+                style:
+                    GoogleFonts.josefinSans(fontSize: 20, color: Colors.white),
+              )
+            : ListView.builder(
+                itemCount: alarmes.length,
+                itemBuilder: (context, index) {
+                  var partes = alarmes[index].split(" - ");
+                  String horario = partes.length > 1
+                      ? partes[1]
+                      : "Horário não definido"; // Verificação corrigida
+
+                  return Column(
+                    children: [
+                      ListTile(
+                        title: Center(
+                          // Mantém o nome do alarme centralizado
+                          child: Text(
+                            partes[0], // Nome do alarme
                             style: TextStyle(color: Colors.white, fontSize: 24),
                           ),
                         ),
-                        Divider(
-                            color: Color(0xFF0DAD9E),
-                            thickness: 1,
-                            height: 1), // Sem padding
-                      ],
-                    );
-                  },
-                )),
+                        leading: Text(
+                          // Coloca o horário na esquerda
+                          horario,
+                          style: TextStyle(color: Colors.white, fontSize: 24),
+                        ),
+                        trailing: PopupMenuButton<String>(
+                          onSelected: (String result) {
+                            if (result == 'Editar') {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => EditarAlarmePage(
+                                    alarme: alarmes[index],
+                                    onSave: (String novoNome,
+                                        TimeOfDay? novoHorario) async {
+                                      // Mantém o horário anterior caso novoHorario seja nulo
+                                      String horarioAntigo = partes[1];
+                                      TimeOfDay horarioFinal = novoHorario ??
+                                          TimeOfDay(
+                                            hour: int.parse(
+                                                horarioAntigo.split(":")[0]),
+                                            minute: int.parse(
+                                                horarioAntigo.split(":")[1]),
+                                          );
+
+                                      await _editarAlarme(
+                                          alarmes[index],
+                                          novoNome,
+                                          horarioFinal); // Edita no Firebase
+                                      setState(() {
+                                        alarmes[index] =
+                                            "$novoNome";
+                                      });
+                                    },
+                                  ),
+                                ),
+                              );
+                            } else if (result == 'Excluir') {
+                              _excluirAlarme(
+                                  alarmes[index]); // Exclui do Firebase
+                              setState(() {
+                                alarmes.removeAt(index);
+                              });
+                            }
+                          },
+                          itemBuilder: (BuildContext context) =>
+                              <PopupMenuEntry<String>>[
+                            const PopupMenuItem<String>(
+                              value: 'Editar',
+                              child: Text('Editar Alarme'),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'Excluir',
+                              child: Text('Excluir Alarme'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Divider(
+                        color: Color(0xFF0DAD9E),
+                        thickness: 1,
+                        height: 1,
+                      ),
+                    ],
+                  );
+                },
+              ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => AdicionarAlarmes(),
+            ),
+          );
+        },
+        child: Icon(Icons.add),
+        backgroundColor: Color(0xFF0DAD9E), // A cor do botão flutuante
+      ),
+    );
+  }
+
+  // Função para excluir alarme
+  Future<void> _excluirAlarme(String alarme) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('alarmes')
+          .where('uid', isEqualTo: user.uid)
+          .where('nome', isEqualTo: alarme.split(' - ')[0])
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        DocumentSnapshot doc = snapshot.docs.first;
+        await doc.reference.delete();
+      }
+    }
+  }
+
+  // Função para editar alarme
+  Future<void> _editarAlarme(
+      String alarmeAntigo, String novoNome, TimeOfDay novoHorario) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('alarmes')
+          .where('uid', isEqualTo: user.uid)
+          .where('nome', isEqualTo: alarmeAntigo.split(' - ')[0])
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        DocumentSnapshot doc = snapshot.docs.first;
+        await doc.reference.update({
+          'nome': novoNome,
+          'horario': "${novoHorario.hour}:${novoHorario.minute}",
+        });
+
+        setState(() {
+          print(
+              "Alarme atualizado: $novoNome - ${novoHorario.hour}:${novoHorario.minute}");
+        });
+      }
+    }
+  }
+}
+
+
+class EditarAlarmePage extends StatefulWidget {
+  final String alarme;
+  final Function(String, TimeOfDay) onSave;
+
+  const EditarAlarmePage({Key? key, required this.alarme, required this.onSave})
+      : super(key: key);
+
+  @override
+  _EditarAlarmePageState createState() => _EditarAlarmePageState();
+}
+
+class _EditarAlarmePageState extends State<EditarAlarmePage> {
+  late TextEditingController alarmNameController;
+  TimeOfDay? selectedTime;
+  String? horarioAntigo;
+
+  @override
+  void initState() {
+    super.initState();
+    // Inicializa o controlador com o nome do alarme
+    alarmNameController = TextEditingController(
+      text: widget.alarme.split(" - ")[0],
+    );
+
+    // Tenta inicializar o horário do alarme
+    try {
+      List<String> partes = widget.alarme.split(" - ");
+      if (partes.length > 1) {
+        horarioAntigo = partes[1]; // Pega o horário antigo
+      } else {
+        horarioAntigo = null;
+      }
+    } catch (e) {
+      horarioAntigo = null;
+    }
+
+    // Se o horário antigo existe, tenta converter para TimeOfDay
+    if (horarioAntigo != null) {
+      try {
+        final timeParts = horarioAntigo!.split(":");
+        selectedTime = TimeOfDay(
+          hour: int.parse(timeParts[0]),
+          minute: int.parse(timeParts[1]),
+        );
+      } catch (e) {
+        selectedTime = null;
+      }
+    } else {
+      selectedTime = null; // Se não houver horário antigo, inicia como null
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: selectedTime ?? TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        selectedTime = picked;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Editar Alarme',
+            style: GoogleFonts.josefinSans(color: Colors.white, fontSize: 28)),
+        backgroundColor: Color(0xFF0E1315),
+        centerTitle: true,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(4.0),
+          child: Container(
+            color: Color(0xFF0DAD9E),
+            height: 4.0,
+          ),
+        ),
+      ),
+      backgroundColor: const Color(0xFF0E1315),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            TextField(
+              controller: alarmNameController,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                labelText: 'Nome do alarme',
+                labelStyle: TextStyle(color: Color(0xFF0DAD9E)),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFF0DAD9E)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFF0DAD9E), width: 2.0),
+                ),
+              ),
+              style: TextStyle(color: Colors.white),
+            ),
+            SizedBox(height: 20),
+            OutlinedButton(
+              onPressed: () => _selectTime(context),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.white.withOpacity(0.1),
+                side: BorderSide(color: Colors.white, width: 2),
+                textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                minimumSize: Size(240, 48),
+              ),
+              child: const Text('Selecionar Horário'),
+            ),
+            SizedBox(height: 20),
+            Text(
+              selectedTime != null
+                  ? 'Horário selecionado: ${selectedTime!.format(context)}'
+                  : horarioAntigo != null
+                      ? 'Horário atual: $horarioAntigo'
+                      : 'Horário não selecionado',
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            SizedBox(height: 40),
+            OutlinedButton(
+              onPressed: () {
+                String novoNome = alarmNameController.text;
+                TimeOfDay? novoHorario = selectedTime;
+
+                // Se o novo horário for null, mantém o horário antigo
+                if (novoHorario == null && horarioAntigo != null) {
+                  final timeParts = horarioAntigo!.split(":");
+                  novoHorario = TimeOfDay(
+                    hour: int.parse(timeParts[0]),
+                    minute: int.parse(timeParts[1]),
+                  );
+                }
+
+                widget.onSave(
+                  novoNome,
+                  novoHorario ?? TimeOfDay.now(), // Garante um horário
+                );
+
+                Navigator.of(context).pop(); // Fecha a tela após salvar
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.white.withOpacity(0.1),
+                side: BorderSide(color: Colors.white, width: 2),
+                textStyle: GoogleFonts.josefinSans(fontSize: 20),
+                minimumSize: Size(240, 48),
+              ),
+              child: const Text('Salvar'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
+
+
+
 
 // Guia Adicionar Alarmes
 class AdicionarAlarmes extends StatefulWidget {
@@ -1263,6 +1558,18 @@ class _AdicionarAlarmesState extends State<AdicionarAlarmes> {
     if (picked != null && picked != selectedTime) {
       setState(() {
         selectedTime = picked;
+      });
+    }
+  }
+
+  Future<void> _salvarAlarme(String nome, TimeOfDay horario) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Cria um documento com um ID gerado automaticamente na coleção 'alarmes'
+      await FirebaseFirestore.instance.collection('alarmes').add({
+        'uid': user.uid, // Associa o alarme ao usuário
+        'nome': nome,
+        'horario': "${horario.hour}:${horario.minute}",
       });
     }
   }
@@ -1339,16 +1646,14 @@ class _AdicionarAlarmesState extends State<AdicionarAlarmes> {
               ),
               SizedBox(height: 40),
               OutlinedButton(
-                onPressed: () {
+                onPressed: () async {
                   String alarmName = alarmNameController.text.isEmpty
                       ? ''
                       : alarmNameController.text;
-                  setState(() {
-                    alarmes.add("$alarmName - ${selectedTime.format(context)}");
-                  });
+                  await _salvarAlarme(
+                      alarmName, selectedTime); // Salva no Firebase
                   Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => EditarAlarmes(
-                      alarmes: alarmes,
                       onAlarmesUpdated: () => setState(() {}),
                     ),
                   ));
