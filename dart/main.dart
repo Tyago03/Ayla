@@ -17,11 +17,6 @@ import 'package:flutter_tts/flutter_tts.dart';
 // Plano de fundo: #0E1315
 // Cor dos realces: #0DAD9E
 
-// A fazer:
-// - salvar foto de perfil
-// - arrumar a opção trocar email
-// - salvar alarmes
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (Firebase.apps.isEmpty) {
