@@ -1,124 +1,159 @@
-import speech_recognition as sr
-import pyttsx3
-import os
-from datetime import date
-import datetime
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime, timedelta
 import requests
+import re
+import logging
 
-nome = "Tyago"
-hora = datetime.datetime.now()
-data = date.today()
-ds = date.weekday(data)
-dias = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
-meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
-APIclima = "3fa1b2a2653d17190c4a1f574d8a259a"
-ativo = False  
-ultima_fala = datetime.datetime.now()
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
 
-while True:
-    mic = sr.Recognizer()
+# comando: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+# segundo comando: nesse diretório 'ngrok http 8000'
+app = FastAPI()
 
-    with sr.Microphone() as source:
+origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-        engine = pyttsx3.init()
-        engine.setProperty('voice', "com.apple.speech.synthesis.voice.luciana")
-        mic.adjust_for_ambient_noise(source)
+# Lista de compras global
+compras = []
+# Lista de alarmes global
+alarmes = []
+# Dicionário para armazenar listas criadas pelo usuário
+listas = {}
 
-        audio = mic.listen(source)
+# Regex patterns
+time_pattern = re.compile(r'\b\d{1,2}:\d{2}\b')
+date_pattern = re.compile(r'\b\d{1,2}/\d{1,2}/\d{4}\b')
 
-        try:
-            # Verificar se houve uma fala antes de tentar interpretar a frase
-                frase = mic.recognize_google(audio, language='pt-BR').lower()
+def extract_city(text):
+    match = re.search(r"(em|na|no|de)\s+([A-Za-z\s]+)", text)
+    if match:
+        return match.group(2).strip()
+    return None
 
-                # Verificar se a palavra de ativação foi dita e o sistema não estava ativo
-                if ('ayla' in frase or 'aylla' in frase or 'aila' in frase or 'ailla' in frase) and not ativo:
-                    print("Sistema ativado.")
-                    print("Fale:")
-                    print(frase)
-                    ativo = True
+def extract_time(text):
+    match = time_pattern.search(text)
+    if match:
+        return match.group()
+    return None
 
+def extract_date(text):
+    match = date_pattern.search(text)
+    if match:
+        return match.group()
+    return None
 
-                # Se o sistema estiver ativado, execute as ações
-                if ativo:
+def process_user_command(text):
+    global compras, alarmes
+    text = text.lower()
+    if not text:
+        return "Não entendi. Dê o comando novamente."
 
-                    if ('configuração' in frase) and 'inicial' in frase:
-                        engine.say("Vamos começar. Qual é o seu nome?")
-                        engine.runAndWait()
-                        audio = mic.listen(source)
-                        nome_usuario = mic.recognize_google(audio, language='pt-BR').lower()
-                        
-                        engine.say("Entendi. E em qual cidade você vive?")
-                        engine.runAndWait()
-                        audio = mic.listen(source)
-                        cidade_usuario = mic.recognize_google(audio, language='pt-BR').lower()
+    hora = datetime.now()
+    data = datetime.today().date()  # Certifique-se de que 'data' seja inicializado corretamente
+    ds = data.weekday()
+    dias = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
+    meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+    APIclima = "3fa1b2a2653d17190c4a1f574d8a259a"
 
-                        engine.say(f"Certo. Seu nome é {nome_usuario}, e a cidade é {cidade_usuario}.")
-                        engine.runAndWait()
-                        ativo = False
-                        
-                    # desligar / reiniciar o computador
-                    elif ('desligue' in frase) and 'computador' in frase:
-                        engine.say("desligando o computador")
-                        engine.runAndWait()
-                        # os.system("shutdown -s -t 1")
-                        ativo = False
+    if ('qual dia' in text or 'que dia' in text) and 'hoje' in text:
+        return f"Hoje é {dias[ds]}, dia {data.day} de {meses[data.month - 1]} de {data.year}"
+    
+    elif 'command' in text:
+        return "deu certo, mas deu errado"
+    
+    elif 'que horas são' in text:
+        if hora.minute == 0:
+            return f"Agora são {hora.hour} horas em ponto."
+        else:
+            return f"Agora são {hora.hour} horas e {hora.minute} minutos."
+        
+    elif any(keyword in text for keyword in ['temperatura', 'clima', 'tempo']):
+        cidade_usuario = extract_city(text)
+        if cidade_usuario:
+            cid = f"https://api.openweathermap.org/data/2.5/weather?q={cidade_usuario}&appid={APIclima}&lang=pt_br"
+            req = requests.get(cid)
+            dic = req.json()
+            if req.status_code == 200:
+                temp = dic['main']['temp'] - 273.15
+                descr = dic['weather'][0]['description']
+                return f"A temperatura em {cidade_usuario} é de {round(temp, 0)} graus, e o clima é {descr}"
+            else:
+                return f"Não consegui obter a temperatura para {cidade_usuario}."
+        else:
+            return "Por favor, informe o nome da cidade."
+    
+    elif ('adicione' in text or 'coloque' in text) and 'lista de compras' in text:
+        item = text.split(' ', 1)[1].replace('na lista de compras', '').replace('lista de compras', '').strip()
+        if item in compras:
+            return f"{item} já está na lista de compras."
+        else:
+            compras.append(item)
+            return f"{item} adicionado à lista de compras."
+    
+    elif 'limpe a lista de compras' in text or 'apague a lista de compras' in text:
+        if not compras:
+            return "A lista de compras já está limpa."
+        else:
+            compras = []
+            return "Lista de compras apagada."
+        
+    elif ('crie' in text or 'cria' in text) and 'lista' in text:
+        lista_nome_match = re.search(r'lista chamada (\w+)', text)
+        if lista_nome_match:
+            lista_nome = lista_nome_match.group(1)
+            if lista_nome in listas:
+                return f"Já existe uma lista chamada {lista_nome}."
+            else:
+                listas[lista_nome] = []
+                return f"Acabei de criar a lista {lista_nome}."
+        else:
+            return "Por favor, informe o nome da lista que deseja criar."
+    
+    elif 'alarme' in text:
+        time = extract_time(text)
+        date = extract_date(text)
+        name = re.search(r'alarme chamado (\w+)', text)
+        
+        if not time:
+            return "Por favor, informe o horário para o alarme."
+        if not date:
+            return "Por favor, informe a data para o alarme."
+        if not name:
+            return "Por favor, informe o nome do alarme."
 
-                    elif ('reinicie' in frase) and 'computador' in frase:
-                        engine.say("reiniciando o computador")
-                        engine.runAndWait()
-                        # os.system("shutdown -r -t 1")
-                        ativo = False
+        alarmes.append({'name': name.group(1), 'time': time, 'date': date})
+        return f"Alarme {name.group(1)} para o dia {date} às {time} criado com sucesso."
+    
+    else:
+        return "Comando não reconhecido."
 
-                    # abrir programas
-                    elif ('abrir' in frase or 'abra' in frase) and ('opera' in frase or 'ópera' in frase):
-                        engine.say("Abrindo o opera.")
-                        os.startfile("C:/Users/Pessoal/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Navegador Opera GX.lnk")
-                        engine.runAndWait()
-                        ativo = False
+class Command(BaseModel):
+    text: str
 
-                    elif ('abrir' in frase or 'abra' in frase) and 'discord' in frase:
-                        engine.say("Abrindo o discordi.")
-                        os.startfile("C:/Users/Pessoal/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Discord Inc/Discord.lnk")
-                        engine.runAndWait()
-                        ativo = False
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
 
-                    elif ('abrir' in frase or 'abra' in frase) and 'steam' in frase:
-                        engine.say("Abrindo a steam.")
-                        os.startfile("C:/Users/Pessoal/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Steam/Steam.lnk")
-                        engine.runAndWait()
-                        ativo = False
+@app.post("/command/")
+async def process_command_endpoint(command: Command):
+    try:
+        logging.info(f"Recebendo comando: {command.text}")
+        response = process_user_command(command.text)
+        logging.info(f"Resposta gerada: {response}")
+        return {"message": response}
+    except Exception as e:
+        logging.error(f"Erro ao processar comando: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-                    elif ('abrir' in frase or 'abra' in frase) and 'vscode' in frase:
-                        engine.say("Abrindo o visual studio code.")
-                        os.startfile("C:/Users/Pessoal/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Visual Studio Code/Visual Studio Code.lnk")
-                        engine.runAndWait()
-                        ativo = False
-
-                    # checar temperatura, clima, horário e data
-                    elif ('qual dia' in frase or 'que dia' in frase) and 'hoje' in frase:
-                        engine.say(f"Hoje é {dias[ds]}, dia {data.day} de {meses[data.month - 1]} de {data.year}")
-                        engine.runAndWait()
-                        ativo = False
-
-                    elif 'que horas são' in frase:
-                        if hora.minute == 0:
-                            engine.say(f"Agora são {hora.hour} horas em ponto.")
-                            engine.runAndWait()
-                        else:
-                            engine.say(f"Agora são {hora.hour} horas e {hora.minute} minutos.")
-                            engine.runAndWait()
-                        ativo = False
-
-                    elif any(keyword in frase for keyword in ['temperatura', 'clima']):
-                        cid = f"https://api.openweathermap.org/data/2.5/weather?q={cidade_usuario}&appid={APIclima}&lang=pt_br"
-                        req = requests.get(cid)
-                        dic = requests.get(cid).json()
-                        temp = dic['main']['temp'] - 273.15
-                        descr = dic['weather'][0]['description']
-                        engine.say(f"A temperatura em {cidade_usuario} é de {round(temp, 0)} graus, e o clima é {descr}")
-                        engine.runAndWait()
-                        ativo = False
-                        
-
-        except sr.UnknownValueError:
-            print("Não entendi. Dê o comando novamente:")
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
