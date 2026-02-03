@@ -127,11 +127,12 @@ A Ayla utiliza expressões regulares (regex) para extrair informações dos coma
 
 - Tratamento de exceções com códigos HTTP apropriados
 
-Autor
+# Autor
 Desenvolvido por Tyago03
 
-Licença
+# Licença
 Este projeto está sob licença a ser definida.
+
 
 
 
