@@ -131,7 +131,10 @@ A Ayla utiliza expressões regulares (regex) para extrair informações dos coma
 Desenvolvido por [Tyago03](https://github.com/Tyago03)
 
 ## Licença
-Este projeto está sob licença a ser definida.
+
+© 2026 Tyago03. Todos os direitos reservados.
+
+
 
 
 
