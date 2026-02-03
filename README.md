@@ -127,12 +127,17 @@ A Ayla utiliza expressões regulares (regex) para extrair informações dos coma
 
 - Tratamento de exceções com códigos HTTP apropriados
 
-## Autor
-Desenvolvido por [Tyago03](https://github.com/Tyago03)
-
 ## Licença
 
-© 2026 Tyago03. Todos os direitos reservados.
+Este projeto foi desenvolvido para fins educacionais como parte de um trabalho acadêmico em grupo.
+
+© 2026 Tyago, Christian e Marcos. Todos os direitos reservados.
+
+Este software é disponibilizado apenas para fins de demonstração em portfólio acadêmico. 
+Nenhuma parte deste projeto pode ser reproduzida, distribuída ou utilizada sem 
+autorização prévia por escrito de todos os autores.
+
+
 
 
 
