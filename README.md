@@ -55,7 +55,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ngrok http 8000
 ````
 
-3. Envie requisições POST para o endpoint /command/:
+3. Envie requisições POST para o endpoint `/command/`:
 
 ````json
 {
@@ -79,63 +79,59 @@ ngrok http 8000
 - "Limpe a lista de compras"
 
 ## Endpoints da API
-GET /
+`GET /`
 Endpoint de teste que retorna uma mensagem de boas-vindas.
 
-POST /command/
+`POST /command/`
 Processa comandos de texto e retorna a resposta da assistente.
 
-Request Body:
+**Request Body:**
 
-json
+````json
 {
   "text": "seu comando aqui"
 }
-Response:
+````
 
-json
+**Response:**
+
+````json
 {
   "message": "resposta da assistente"
 }
-Estrutura do Projeto
-text
+````
+
+## Estrutura do Projeto
+````text
 Ayla/
 ├── Python/
 │   ├── main.py      # API principal com FastAPI
 │   └── teste.py     # Arquivo de testes
 ├── dart/            # Implementações em Dart (em desenvolvimento)
 └── README.md
-Recursos de Processamento
+````
+
+## Recursos de Processamento
 A Ayla utiliza expressões regulares (regex) para extrair informações dos comandos:
 
-Horários: Formato HH:MM
+- Horários: Formato HH:MM
 
-Datas: Formato DD/MM/YYYY
+- Datas: Formato DD/MM/YYYY
 
-Cidades: Extração contextual após preposições
+- Cidades: Extração contextual após preposições
 
-Configurações de Segurança
-CORS habilitado para todas as origens (["*"])
+## Configurações de Segurança
+- CORS habilitado para todas as origens (`["*"]`)
 
-Logging configurado para monitoramento de requisições
+- Logging configurado para monitoramento de requisições
 
-Tratamento de exceções com códigos HTTP apropriados
-
-Desenvolvimento Futuro
- Integração com interface Dart
-
- Persistência de dados (banco de dados)
-
- Autenticação de usuários
-
- Novos comandos e funcionalidades
-
- Melhorias no processamento de linguagem natural
+- Tratamento de exceções com códigos HTTP apropriados
 
 Autor
 Desenvolvido por Tyago03
 
 Licença
 Este projeto está sob licença a ser definida.
+
 
 
