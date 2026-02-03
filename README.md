@@ -24,7 +24,7 @@ Ayla é uma assistente virtual desenvolvida em Python que processa comandos por 
 ## Instalação
 
 1. Clone o repositório:
-bash```
+```bash
 git clone https://github.com/Tyago03/Ayla.git
 cd Ayla/Python
 ````
@@ -135,3 +135,4 @@ Desenvolvido por Tyago03
 
 Licença
 Este projeto está sob licença a ser definida.
+
