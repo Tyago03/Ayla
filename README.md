@@ -45,38 +45,40 @@ APIclima = "sua_chave_api_aqui"
 
 1. Inicie o servidor FastAPI:
 
-bash````
+````bash
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-
+````
 
 2. (Opcional) Para acesso externo, utilize ngrok:
 
-bash````
+````bash
 ngrok http 8000
 ````
 
-Envie requisições POST para o endpoint /command/:
+3. Envie requisições POST para o endpoint /command/:
 
-json
+````json
 {
   "text": "qual a temperatura em São Paulo"
 }
-Exemplos de Comandos
-"Qual dia é hoje?"
+````
+## Exemplos de Comandos
 
-"Que horas são?"
+- "Qual dia é hoje?"
 
-"Qual a temperatura em Goiânia?"
+- "Que horas são?"
 
-"Adicione leite na lista de compras"
+- "Qual a temperatura em Goiânia?"
 
-"Crie uma lista chamada mercado"
+- "Adicione leite na lista de compras"
 
-"Crie um alarme chamado reuniao para o dia 05/02/2026 às 14:30"
+- "Crie uma lista chamada mercado"
 
-"Limpe a lista de compras"
+- "Crie um alarme chamado reuniao para o dia 05/02/2026 às 14:30"
 
-Endpoints da API
+- "Limpe a lista de compras"
+
+## Endpoints da API
 GET /
 Endpoint de teste que retorna uma mensagem de boas-vindas.
 
@@ -135,4 +137,5 @@ Desenvolvido por Tyago03
 
 Licença
 Este projeto está sob licença a ser definida.
+
 
