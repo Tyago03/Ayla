@@ -1,0 +1,6 @@
+# Dependências de execução; Python 3.10 ou superior.
+# Faixas intencionais para aproveitar o ambiente que você já preparou.
+fastapi>=0.115,<1
+pydantic>=2.10,<3
+requests>=2.32.3,<3
+uvicorn>=0.30,<1

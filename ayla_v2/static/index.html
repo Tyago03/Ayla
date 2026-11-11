@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0E1315">
+  <title>Ayla · Seu espaço de conversa</title>
+  <link rel="icon" href="/static/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css?v=050">
+  <script src="/static/voice.js?v=050" defer></script>
+  <script src="/static/app.js?v=050" defer></script>
+</head>
+<body>
+<a href="#command" class="skip-link">Ir para a mensagem</a>
+<button id="rail-backdrop" class="rail-backdrop" aria-label="Fechar menu" hidden></button>
+<aside id="sidebar" class="sidebar" aria-label="Navegação e listas">
+  <div class="brand-row">
+    <a class="brand" href="/" aria-label="Ayla, início"><img src="/brand/wordmark" alt="Ayla" width="104" height="28"></a>
+    <span class="local-label">LOCAL</span>
+    <button id="close-menu" class="icon-button mobile-only" aria-label="Fechar menu"><svg><use href="/static/icons.svg#close"></use></svg></button>
+  </div>
+  <button id="new-chat" class="new-chat"><svg><use href="/static/icons.svg#plus"></use></svg>Nova conversa<span class="new-chat-arrow" aria-hidden="true">↗</span></button>
+  <div class="section-label"><span>SEU ESPAÇO</span></div>
+  <button id="conversation-nav" class="nav-item active" aria-current="page"><svg><use href="/static/icons.svg#chat"></use></svg>Conversa<span class="nav-dot" aria-hidden="true"></span></button>
+  <div class="list-section-header"><span class="section-label">MINHAS LISTAS <span id="list-count" class="count">0</span></span><button id="refresh" class="icon-button" title="Atualizar listas" aria-label="Atualizar listas"><svg><use href="/static/icons.svg#refresh"></use></svg></button></div>
+  <div id="saved-lists" class="saved-lists"><p class="sidebar-empty">Buscando suas listas…</p></div>
+  <p id="list-notice" class="list-notice" role="status"></p>
+  <div class="sidebar-bottom">
+    <button id="voice-settings" class="nav-item"><svg><use href="/static/icons.svg#volume"></use></svg>Voz e microfone</button>
+    <button id="about-sidebar" class="nav-item"><svg><use href="/static/icons.svg#info"></use></svg>Sobre a Ayla</button>
+    <div class="local-card"><span class="local-card-icon"><svg><use href="/static/icons.svg#shield"></use></svg></span><div><strong>Seu computador. Seu espaço.</strong><span>Listas salvas localmente.</span></div></div>
+    <div class="sidebar-foot"><span>Ayla <span class="version">0.5</span></span><span>Feita para simplificar.</span></div>
+  </div>
+</aside>
+<main id="content" class="content">
+  <header class="topbar">
+    <div class="topbar-left"><button id="open-menu" class="icon-button mobile-only" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false"><svg><use href="/static/icons.svg#menu"></use></svg></button><span class="breadcrumb">Seu espaço <span aria-hidden="true">/</span> <strong>Conversa</strong></span></div>
+    <div class="topbar-right"><span id="model-status" class="model-status checking" role="status"><span class="status-dot"></span><span id="status-text">Verificando modelo</span></span><button id="about-header" class="icon-button" title="Sobre esta versão" aria-label="Sobre esta versão"><svg><use href="/static/icons.svg#info"></use></svg></button></div>
+  </header>
+  <div id="conversation-scroll" class="conversation-scroll">
+    <section id="welcome" class="welcome" aria-labelledby="welcome-title">
+      <div class="welcome-mark" aria-hidden="true"><svg><use href="/static/icons.svg#spark"></use></svg></div>
+      <div class="eyebrow">UM POUCO MAIS DE CLAREZA</div>
+      <h1 id="welcome-title">Como posso ajudar você?</h1>
+      <p class="welcome-description">Converse, aprenda e explore ideias.<br>Pesquisa quando precisa. Ações só com a sua confirmação.</p>
+      <div class="suggestions" aria-label="Sugestões de pedidos">
+        <button class="suggestion" data-example="Explique TCP e UDP com um exemplo simples."><span class="suggestion-icon"><svg><use href="/static/icons.svg#list"></use></svg></span><strong>Entender uma ideia</strong><span>Explicações que fazem sentido.</span><svg class="suggestion-arrow"><use href="/static/icons.svg#arrow-up-right"></use></svg></button>
+        <button class="suggestion" data-example="Pesquise novidades sobre segurança de aplicações web e cite as fontes."><span class="suggestion-icon"><svg><use href="/static/icons.svg#search"></use></svg></span><strong>Explorar com fontes</strong><span>Pesquisas para além do que o modelo sabe.</span><svg class="suggestion-arrow"><use href="/static/icons.svg#arrow-up-right"></use></svg></button>
+        <button class="suggestion" data-example="Quanto é 18% de 2450?"><span class="suggestion-icon"><svg><use href="/static/icons.svg#sun"></use></svg></span><strong>Resolver uma conta</strong><span>Resultados calculados, não adivinhados.</span><svg class="suggestion-arrow"><use href="/static/icons.svg#arrow-up-right"></use></svg></button>
+      </div>
+      <p class="welcome-note"><svg><use href="/static/icons.svg#shield"></use></svg>Alterações nas suas listas sempre pedem confirmação.</p>
+    </section>
+    <section id="messages" class="messages" role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversa com a Ayla"></section>
+  </div>
+  <div class="composer-area">
+    <div id="speech-player" class="audio-status" hidden><svg><use href="/static/icons.svg#volume"></use></svg><span id="speech-player-label" role="status"></span><button id="pause-speech" type="button">Pausar</button><button id="stop-speech" type="button">Parar</button></div>
+    <div id="dictation-strip" class="audio-status" hidden><span class="recording-dot" aria-hidden="true"></span><span id="dictation-status" role="status"></span><button id="cancel-dictation" type="button">Cancelar</button></div>
+    <form id="command-form" class="composer">
+      <label for="command" class="sr-only">Mensagem para a Ayla</label>
+      <textarea id="command" rows="2" maxlength="1000" placeholder="Escreva um pedido para a Ayla…" required></textarea>
+      <div class="web-controls"><label class="web-toggle"><input id="web-enabled" type="checkbox"> Permitir pesquisa web</label><label class="web-toggle"><input id="web-force" type="checkbox"> Pesquisar este pedido</label><button id="web-settings" type="button" class="web-status">Configurar pesquisa</button></div>
+      <p id="web-mode-state" class="web-mode-state offline" role="status">Web desativada · autorize para pesquisar.</p>
+      <div class="composer-bottom"><span class="composer-model"><svg><use href="/static/icons.svg#spark"></use></svg><span id="model-name">Qwen · modelo local</span></span><div class="composer-controls"><span id="character-count" class="character-count" aria-hidden="true"></span><button id="microphone" class="icon-button microphone" type="button" title="Ditar mensagem" aria-label="Ditar mensagem" aria-pressed="false"><svg><use href="/static/icons.svg#mic"></use></svg></button><button id="send" class="send" type="submit" title="Enviar mensagem" aria-label="Enviar mensagem"><svg><use href="/static/icons.svg#arrow-up"></use></svg></button></div></div>
+    </form>
+    <div class="composer-caption"><span id="activity" role="status">Enter para enviar <span aria-hidden="true">·</span> Shift + Enter para nova linha</span><button id="limits-link" type="button">Como funciona</button></div>
+    <p class="disclaimer">A Ayla pode errar. Confira fontes e datas. Pesquisa envia consultas/URLs ao Ollama; listas ficam locais. Revise antes de confirmar.</p>
+  </div>
+</main>
+<dialog id="about-dialog" class="about-dialog" aria-labelledby="about-title">
+  <div class="dialog-top"><span class="eyebrow">TRANSPARÊNCIA, SEM COMPLICAÇÃO</span><button id="close-about" class="icon-button" aria-label="Fechar informações"><svg><use href="/static/icons.svg#close"></use></svg></button></div>
+  <h2 id="about-title">Modelo local.<br>Pesquisa com transparência.</h2>
+  <p class="dialog-intro">Conversa geral com Qwen local, pesquisa web com fontes, calculadora e suas ferramentas pessoais. Você também pode ditar e ouvir respostas. A web usa um serviço externo e precisa da sua autorização.</p>
+  <div class="about-grid"><div><svg><use href="/static/icons.svg#cpu"></use></svg><h3>O modelo fica aqui</h3><p>Qwen pelo Ollama, no seu computador. A interpretação dos pedidos é local. Voz e clima têm condições próprias, descritas abaixo.</p></div><div><svg><use href="/static/icons.svg#shield"></use></svg><h3>Antes de salvar, confirmar</h3><p>A IA propõe. O código valida. Uma alteração só é aplicada depois da sua confirmação, válida por 10 minutos. Remoções e renomeações usam o estado que você revisou.</p></div></div>
+  <section class="about-section"><h3>Seus dados</h3><p>As listas ficam no SQLite local e continuam após reiniciar. O contexto curto fica na memória do servidor por até 20 minutos sem atividade: última lista, tarefa incompleta e até quatro pares recentes de mensagens (limitados por tamanho). Não há histórico persistente. “Nova conversa” limpa contexto e tela e cancela propostas pendentes; as listas permanecem.</p></section>
+  <section class="about-section"><h3>O que usa internet</h3><p>Clima: cidade e coordenadas vão ao Open-Meteo. Ditado local opcional: o Whisper é baixado uma vez, depois processa o áudio neste computador. Ditado do navegador pode usar serviço externo e pede consentimento. Vozes remotas podem enviar o texto da resposta para síntese e também pedem autorização.</p></section>
+  <section class="about-section"><h3>Limites importantes</h3><p>Uma ação por mensagem. A lista anterior pode ser referenciada como “nela”; respostas curtas completam perguntas pendentes. Sem apagar listas inteiras, alarmes, execução de programas ou autenticação multiusuário. A ferramenta meteorológica é de clima atual; outras informações podem ser pesquisadas com fontes. Use apenas neste computador; não exponha o servidor à internet.</p></section>
+  <div class="about-source">Clima: <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> · Localização: GeoNames.<br>Uso pessoal/educacional não comercial. Condições de modelo meteorológico, não medição local garantida.</div>
+  <button id="recheck-model" class="secondary">Verificar modelo novamente</button>
+</dialog>
+<dialog id="new-dialog" class="about-dialog compact-dialog" aria-labelledby="new-title"><h2 id="new-title">Começar de novo?</h2><p>As mensagens desta tela serão limpas e os pedidos ainda não confirmados serão cancelados. Suas listas salvas continuam intactas.</p><div class="actions"><button id="confirm-new" class="primary">Nova conversa</button><button id="cancel-new" class="secondary">Continuar aqui</button></div></dialog>
+<dialog id="voice-dialog" class="about-dialog" aria-labelledby="voice-title">
+  <div class="dialog-top"><span class="eyebrow">FALE. REVISE. OUÇA.</span><button id="close-voice" class="icon-button" aria-label="Fechar voz e microfone"><svg><use href="/static/icons.svg#close"></use></svg></button></div>
+  <h2 id="voice-title">A Ayla, em voz alta.</h2>
+  <p>O microfone preenche sua mensagem. Nada é enviado ou confirmado sem você. A leitura só começa ao clicar no alto-falante de uma resposta.</p>
+  <section class="about-section voice-fields"><h3>Voz da Ayla</h3><label for="voice-select">Voz disponível neste navegador</label><select id="voice-select"></select><p id="voice-note" role="status"></p>
+  <label for="voice-rate">Velocidade <span id="voice-rate-label">0.98×</span></label><input id="voice-rate" type="range" min="0.7" max="1.3" step="0.01" value="0.98"><button id="test-voice" class="secondary" type="button">Ouvir uma prévia</button></section>
+  <section class="about-section voice-fields"><h3>Transformar fala em texto</h3><label for="dictation-mode">Modo de ditado</label><select id="dictation-mode"><option value="auto">Automático: local quando instalado</option><option value="local">Somente local · Whisper</option><option value="browser">Serviço do navegador · pode usar internet</option></select><p id="dictation-note" role="status"></p><p>Ditados de até 60 segundos. O áudio local não é salvo em arquivo; é processado em memória. Revise nomes, quantidades e negações antes de enviar.</p></section>
+  <button id="recheck-voice" class="secondary" type="button">Verificar vozes e ditado local</button>
+</dialog>
+<dialog id="voice-consent" class="about-dialog compact-dialog" aria-labelledby="voice-consent-title"><h2 id="voice-consent-title">Antes de usar a voz</h2><p id="voice-consent-text"></p><div class="actions"><button id="voice-consent-yes" class="primary" type="button">Autorizar</button><button id="voice-consent-no" class="secondary" type="button">Agora não</button></div></dialog>
+<dialog id="web-dialog" class="about-dialog" aria-labelledby="web-title">
+<div class="dialog-top"><span class="eyebrow">PESQUISA COM FONTES</span><button id="close-web" class="icon-button" aria-label="Fechar pesquisa">×</button></div>
+<h2 id="web-title">Mais contexto.<br>Não mais adivinhação.</h2>
+<p id="web-status-detail" role="status">Verificando configuração…</p>
+<p>Para ativar, execute <strong>CONFIGURAR_PESQUISA_WEB_AYLA.bat</strong> na pasta do projeto. A chave fica em uma configuração do usuário fora do repositório. Nunca cole a chave na conversa.</p>
+<p>Ao permitir pesquisa, a Ayla pode enviar consultas e URLs ao serviço do Ollama. O modelo continua local. Não envie segredos ou dados sigilosos em perguntas de pesquisa.</p>
+<p>“Pesquisar este pedido” executa uma busca antes da resposta (ou informa o bloqueio). No automático, uma segunda decisão local verifica a necessidade de pesquisa quando o modelo tenta responder sem ferramentas. A busca pode ter limites de uso. Fontes recuperadas não garantem que a conclusão esteja correta.</p>
+<section class="web-diagnostic"><p><strong>Separar conexão de inteligência:</strong> o teste abaixo usa uma consulta pública sobre documentação do Ollama. Consome uma consulta, mas não usa o Qwen nem envia suas mensagens.</p><button id="test-web-connection" class="secondary" type="button">Testar conexão (1 consulta)</button><p id="web-test-result" role="status"></p></section>
+<p>A autorização fica nesta aba durante a sessão do navegador, mesmo após atualizar a página. Desative Permitir pesquisa web para revogar.</p>
+<div class="actions"><button id="accept-web" class="primary" type="button">Autorizar pesquisa nesta aba</button><button id="recheck-web" class="secondary" type="button">Verificar configuração</button></div>
+</dialog>
+<div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>
