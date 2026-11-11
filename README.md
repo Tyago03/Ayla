@@ -4,7 +4,7 @@
 
 A Ayla reúne conversa geral, listas com confirmação, calculadora, pesquisa na internet e interação por voz. O modelo Qwen roda localmente pelo Ollama; o backend utiliza FastAPI e a persistência utiliza SQLite.
 
-**Estado atual:** protótipo local de uso pessoal. O código de pesquisa web está integrado, mas o acesso real testado com a conta do autor recebeu HTTP 402 (o provedor solicitou créditos). Portanto, a pesquisa online **não está comprovada como funcional nessa conta** até um novo teste bem-sucedido. A seção [Testes e validação](#testes-e-validação) distingue testes simulados de resultados reais.
+**Estado atual:** protótipo local de uso pessoal. A pesquisa web foi **testada manualmente pelo autor e funcionou após a adição de créditos à conta Ollama**. Antes disso, o serviço retornava HTTP 402 por falta de créditos. A seção [Testes e validação](#testes-e-validação) distingue o teste manual da pesquisa dos testes automatizados com serviços simulados.
 
 ![Página inicial da Ayla em dark mode](docs/ayla-home.png)
 
@@ -107,7 +107,7 @@ A pesquisa na internet não usa uma chave do navegador: ela usa uma **chave da c
 
 O configurador salva o segredo **fora do repositório** (`%LOCALAPPDATA%\Ayla\web-secret.json` no Windows). Se `OLLAMA_API_KEY` estiver definida como variável de ambiente, ela terá precedência. A aplicação utiliza `https://ollama.com/api/web_search`.
 
-**Limitação conhecida:** em teste com a conta do autor, o provedor respondeu `HTTP 402` e `Add usage credits to use web search`. Isso indica bloqueio de acesso por créditos naquela tentativa, e **não uma pesquisa concluída**. Criar outra chave não garante que o bloqueio de conta desapareça. Conversa local, calculadora e listas não exigem essa API.
+**Requisito de créditos:** inicialmente, o provedor retornou `HTTP 402` com a mensagem `Add usage credits to use web search`. **Após adicionar créditos à conta Ollama, o autor confirmou que a pesquisa web voltou a funcionar.** Outras instalações continuam sujeitas à disponibilidade, aos limites e aos créditos do provedor. Conversa local, calculadora e listas não exigem essa API.
 
 ### 4. Voz (opcional)
 
@@ -160,7 +160,7 @@ A suíte de software passou nos **cenários simulados** registrados durante o de
 | Testes automatizados offline com mocks | Executados em entregas anteriores; aprovados nos cenários relatados. |
 | Persistência e confirmação das listas | Cobertas por testes automatizados com dados de teste; também exercitadas manualmente durante o desenvolvimento. |
 | Pesquisa com fontes | Fluxo e tratamento de falhas testados com respostas simuladas. |
-| Pesquisa real pela conta Ollama do autor | **Não concluída:** o provedor retornou HTTP 402, solicitando créditos. |
+| Pesquisa real pela conta Ollama do autor | **Funcionamento confirmado manualmente pelo autor após adicionar créditos à conta.** Antes disso, a API retornava HTTP 402. Não foi medida uma taxa formal de precisão factual. |
 | Qwen real, microfone e ditado | Exigem avaliação na máquina do usuário; não existe uma nota validada de precisão geral no repositório. |
 
 Os números de testes da aplicação **não são uma taxa de acerto da IA**. Links de fontes não asseguram, por si sós, que cada afirmação foi comprovada. Avalie relevância, data e consistência dos resultados antes de utilizá-los como evidência no portfólio.
