@@ -1,13 +1,32 @@
+# Ambiente Python
 .venv/
+venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
 
+# Configuração local e segredos
 .env
 .env.*
 !.env.example
-.ayla_backups/
 web-secret.json
+
+# Bancos, dados e relatórios de avaliação
+ayla_v2/data/
+ayla_v2/evaluation/results/
 *.sqlite3
 *.sqlite3-*
 *.db
+*.db-*
+
+# Backups, logs, áudios e modelos baixados
+.ayla_backups/
+*.log
+*.wav
+*.webm
+*.onnx
+*.gguf
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db

@@ -1,4 +1,4 @@
-# Ayla 0.5.3 — assistente local com pesquisa e ferramentas
+# Ayla 0.5.x — notas técnicas do assistente local
 
 > Compatibilidade preservada da 0.5.1: os testes não exigem permissão de link simbólico no Windows.
 > Leia `VALIDACAO.md` na pasta `ayla_v2` para a distinção entre testes executados e SKIPPED.
@@ -111,7 +111,6 @@ não constitui auditoria completa do DNS/redirecionamento tratado pelo provedor 
 - `service.py`/`storage.py`: regras, confirmação de uso único, SQLite e compatibilidade de nomes.
 - `conversation.py`: contexto temporário por aba.
 - `speech.py`/`static/voice.js`: voz opt-in.
-- `publish.py`: exportação allowlist para repositório novo, sem dados ou histórico antigo.
 
 `llm.py` e `evaluate.py` são a linha de base histórica de classificação de tarefas. O chat
 normal usa o agente. AVALIAR_IA_AYLA.bat avalia essa linha de base; AVALIAR_AGENTE_AYLA.bat
@@ -124,13 +123,16 @@ Não medem precisão do Qwen, qualidade de fontes, desempenho na RTX 4050 ou mic
 O relatório de avaliação real deve ser revisado por uma pessoa: relevância, evidência e datas.
 Não anuncie testes de software como taxa de acerto da IA ou impacto de negócio.
 
-## Publicar o código
+## Repositório público e cuidados
 
-Use PREPARAR_PROJETO_PUBLICO_AYLA.bat. A cópia nova não contém `.git`, app legado `Python/dart`,
-bancos, gravações, backups, credenciais ou pesos dos modelos. O exportador NÃO faz push.
-Revise a saída antes de iniciar um repositório novo; uma checagem heurística não garante ausência
-de todo dado sensível. Tornar o repositório antigo privado não invalida uma credencial exposta:
-revogue/rotacione no provedor. Preserve os créditos e confirme direitos dos assets/coautorias.
+O código está publicado em `Tyago03/Ayla`. A exportação para criar outro repositório
+foi removida deste projeto público: não há mais o comando `PREPARAR_PROJETO_PUBLICO_AYLA.bat`.
+Para executar, veja o [README principal](../README.md).
+
+Bancos, resultados de avaliação, cache, gravações, ambientes virtuais e segredos são dados
+locais e estão contemplados pelo `.gitignore`. Ele não remove dados já versionados.
+Caso alguma chave já tenha sido publicada, revogue/rotacione no provedor; privatizar ou
+excluir um arquivo não invalida a credencial.
 
 ## Referências técnicas
 

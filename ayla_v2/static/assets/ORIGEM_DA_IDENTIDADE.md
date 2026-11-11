@@ -1,21 +1,16 @@
-# Identidade da Ayla
+# Identidade visual da Ayla
 
-Fonte: repositório de Tyago, `Tyago03/Ayla`, consultado em 10/11/2026.
+A interface desta versão preserva as cores utilizadas pelo aplicativo anterior
+**Ayla Mobile**, que hoje é mantido em um repositório privado pelo autor:
 
-- `dart/main.dart`: fundo `#0E1315`; realces `#0DAD9E`.
-- `dart/assets/aylabrancoc.png`: palavra-marca branca, usada pelo cabeçalho quando disponível.
-  SHA do blob original: `9a4f841433ff845dcc55781075ced5b249957f54`.
-- `dart/assets/logomarcabranco.png`: segundo recurso de identidade original.
-  SHA do blob original: `7253e44f44258fd3bd19b2254f39614696841ed7`.
+- Fundo principal: `#0E1315`.
+- Destaques: `#0DAD9E`.
 
-As imagens originais são reaproveitadas da cópia local do repositório pelo atualizador.
-O carregador também procura os caminhos locais conhecidos quando não há cópia em `static/assets`.
-Este ZIP não contém uma cópia binária obtida remotamente dessas imagens.
+As marcas originais `aylabrancoc.png` e `logomarcabranco.png` pertencem à
+identidade do aplicativo anterior. Elas **não estão incluídas nesta publicação**.
+Se o usuário possuir esses arquivos localmente, `branding.py` pode encontrá-los
+nos caminhos documentados; caso contrário, a interface utiliza
+`static/assets/wordmark-fallback.svg`.
 
-`wordmark-fallback.svg` é uma marca alternativa simples para execução isolada, sem os arquivos
-originais. Os ícones da interface e `favicon.svg` pertencem à nova camada visual; não são
-apresentados como ilustrações originais do usuário. Não foram incluídos arquivos de fontes.
-
-Referências:
-https://github.com/Tyago03/Ayla/blob/main/dart/main.dart
-https://github.com/Tyago03/Ayla/tree/main/dart/assets
+O favicon, os ícones e o wordmark alternativo são recursos do projeto web.
+Nenhuma fonte de terceiros foi distribuída neste repositório.

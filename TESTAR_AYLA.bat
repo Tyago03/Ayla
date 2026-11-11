@@ -5,7 +5,7 @@ set PYTHONUTF8=1
 cd /d "%~dp0"
 if not exist ".venv\Scripts\python.exe" (
     echo Nao encontrei a .venv. Este arquivo precisa ficar na raiz do projeto Ayla.
-    echo Execute primeiro ATUALIZAR_AYLA.bat da pasta extraida.
+    echo Execute primeiro INSTALAR_DEPENDENCIAS_AYLA.bat na raiz do projeto.
     pause
     exit /b 1
 )

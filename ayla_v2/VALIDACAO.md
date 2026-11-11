@@ -1,4 +1,6 @@
-# Validação — Ayla 0.5.3
+# Validação — histórico da entrega Ayla 0.5.3
+
+> Este relatório registra os testes **da entrega anterior à limpeza do repositório público**, incluindo os testes do exportador, que já foi removido. Os números abaixo são históricos, não a contagem dos testes da árvore atual. Execute `TESTAR_AYLA.bat` para um resultado atualizado.
 
 Ambiente de execução: Linux. Não equivale a execução nativa no Windows.
 

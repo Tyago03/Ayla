@@ -4,7 +4,7 @@
 
 A Ayla reúne conversa geral, listas com confirmação, calculadora, pesquisa na internet e interação por voz. O modelo Qwen roda localmente pelo Ollama; o backend utiliza FastAPI e a persistência utiliza SQLite.
 
-**Estado atual:** os recursos descritos estão funcionais no ambiente local do autor, incluindo a pesquisa web, testada com sucesso após a adição de créditos à conta do provedor. A seção [Testes e validação](#testes-e-validação) detalha os testes automatizados e a verificação manual.
+**Estado atual:** protótipo local de uso pessoal. O código de pesquisa web está integrado, mas o acesso real testado com a conta do autor recebeu HTTP 402 (o provedor solicitou créditos). Portanto, a pesquisa online **não está comprovada como funcional nessa conta** até um novo teste bem-sucedido. A seção [Testes e validação](#testes-e-validação) distingue testes simulados de resultados reais.
 
 ![Página inicial da Ayla em dark mode](docs/ayla-home.png)
 
@@ -52,7 +52,7 @@ O modelo interpreta a solicitação e participa da elaboração da resposta. As 
 ## Requisitos
 
 - Windows para utilizar os scripts `.bat` distribuídos com o projeto.
-- Python 3 e dependências da aplicação instaladas no ambiente do projeto.
+- Python **3.10 ou superior** e dependências da aplicação instaladas no ambiente do projeto.
 - [Ollama instalado](https://ollama.com/download) e em execução.
 - Modelo Qwen baixado, com o mesmo nome e variante definidos na configuração da Ayla.
 - Memória e espaço em disco compatíveis com o tamanho do modelo escolhido.
@@ -63,56 +63,70 @@ A execução local do modelo e o acesso à pesquisa são componentes diferentes.
 
 ## Executar no Windows
 
-### 1. Preparar o projeto e o modelo
+### 1. Clonar e instalar
 
-Baixe ou clone este repositório e abra o PowerShell na pasta que contém `INICIAR_AYLA.bat`. Use o ambiente Python e as dependências correspondentes à versão do projeto.
+Instale [Git](https://git-scm.com/downloads), [Python 3.10+](https://www.python.org/downloads/) e [Ollama](https://ollama.com/download). Abra o PowerShell e execute:
 
-Confira se o Ollama está acessível e quais modelos estão instalados:
+~~~powershell
+git clone https://github.com/Tyago03/Ayla.git
+cd Ayla
+ollama pull qwen3:4b-instruct
+.\INSTALAR_DEPENDENCIAS_AYLA.bat
+~~~
 
-```powershell
-ollama --version
-ollama list
-```
+O instalador cria a pasta local `.venv` e instala as dependências. Deixe o Ollama em execução. O modelo padrão é `qwen3:4b-instruct`; caso altere `AYLA_MODEL`, instale a variante correspondente e confira a compatibilidade com ferramentas.
 
-Se o Qwen configurado ainda não estiver instalado, baixe a identificação exata usada pela aplicação:
+### 2. Testar e iniciar
 
-```powershell
-$AylaModelo = Read-Host "Nome exato do modelo Qwen configurado na Ayla"
-ollama pull $AylaModelo
-```
+Na raiz do repositório:
 
-O nome informado deve incluir a variante necessária. Baixar um modelo com outro nome não altera automaticamente a configuração da Ayla.
-
-### 2. Iniciar a aplicação
-
-Na raiz do projeto:
-
-```powershell
+~~~powershell
+.\TESTAR_AYLA.bat
 .\INICIAR_AYLA.bat
-```
+~~~
 
-Abra no navegador o endereço local informado pelo iniciador e mantenha o processo em execução enquanto usa a aplicação. Se o endereço gerado incluir um token de acesso local, utilize o endereço completo e não o publique. Esse token é diferente da chave do provedor de pesquisa.
+O iniciador sobe o servidor somente em `127.0.0.1` e abre o navegador no endereço local, normalmente `http://127.0.0.1:8000`. Mantenha a janela do servidor aberta; pressione `Ctrl+C` para encerrá-lo. **Não abra portas no roteador nem publique esse servidor diretamente na internet.**
 
-### 3. Configurar a pesquisa web
+Os testes automáticos usam substitutos simulados para serviços externos. Eles não validam, sozinhos, a precisão do Qwen ou o acesso web da sua conta.
 
-A pesquisa utiliza **Ollama Web Search**. Para habilitá-la:
+### 3. Configurar a API de pesquisa (opcional)
 
-1. Acesse a sua conta Ollama e gere uma chave em [API Keys](https://ollama.com/settings/keys).
-2. Confira se a conta tem acesso ao serviço e saldo ou créditos disponíveis quando exigidos.
-3. Execute o configurador na raiz do projeto:
+A pesquisa na internet não usa uma chave do navegador: ela usa uma **chave da conta Ollama** no backend, além de créditos/acesso ao Ollama Web Search.
 
-   ```powershell
+1. Gere uma chave na página oficial: [Ollama — API Keys](https://ollama.com/settings/keys).
+2. Confira as condições de uso, os créditos e os limites da conta.
+3. Na raiz do projeto, execute:
+
+   ~~~powershell
    .\CONFIGURAR_PESQUISA_WEB_AYLA.bat
-   ```
+   .\VERIFICAR_PESQUISA_AYLA.bat
+   ~~~
 
-4. Informe a chave somente no configurador local.
-5. Autorize a consulta pública de teste quando solicitado. A consulta pode consumir a cota do provedor.
+4. Cole a chave **somente no configurador local**, nunca no chat, no README ou no GitHub.
+5. Na interface da Ayla, ative **Permitir pesquisa web**; use **Pesquisar este pedido** para exigir uma busca na próxima mensagem.
 
-A integração chama `https://ollama.com/api/web_search`. A chave autentica a requisição; os créditos e limites determinam a disponibilidade de uso da conta. A referência técnica está na [documentação do Ollama Web Search](https://docs.ollama.com/capabilities/web-search).
+O configurador salva o segredo **fora do repositório** (`%LOCALAPPDATA%\Ayla\web-secret.json` no Windows). Se `OLLAMA_API_KEY` estiver definida como variável de ambiente, ela terá precedência. A aplicação utiliza `https://ollama.com/api/web_search`.
 
-A configuração salva a credencial localmente em `web-secret.json`, que deve ficar fora do Git. Caso exista uma variável de ambiente `OLLAMA_API_KEY`, ela pode ter precedência sobre a chave salva; confira o aviso do configurador ao substituir uma credencial.
+**Limitação conhecida:** em teste com a conta do autor, o provedor respondeu `HTTP 402` e `Add usage credits to use web search`. Isso indica bloqueio de acesso por créditos naquela tentativa, e **não uma pesquisa concluída**. Criar outra chave não garante que o bloqueio de conta desapareça. Conversa local, calculadora e listas não exigem essa API.
 
-**Não é necessário colocar a chave da API no código da interface nem publicá-la no GitHub.** O navegador é a interface de uso; a credencial de pesquisa pertence à configuração do backend local.
+### 4. Voz (opcional)
+
+A leitura em voz alta usa vozes disponíveis no navegador/sistema. Para preparar o ditado local, encerre a Ayla e execute:
+
+~~~powershell
+.\ATIVAR_DITADO_LOCAL_AYLA.bat
+~~~
+
+O atalho instala bibliotecas e baixa um modelo separado de reconhecimento de fala. Há também ditado pelo navegador, cuja disponibilidade e privacidade dependem do serviço utilizado. Sempre revise o texto reconhecido antes de confirmar ações.
+
+### 5. Outros atalhos úteis
+
+- `DIAGNOSTICAR_AYLA.bat`: verifica o ambiente local.
+- `AVALIAR_AGENTE_AYLA.bat`: exercita o agente com seu Qwen real e gera relatório para revisão humana.
+- `AVALIAR_IA_AYLA.bat`: avalia a linha de base histórica de classificação de intenções.
+- `VERIFICAR_PESQUISA_AYLA.bat`: verifica a API de pesquisa sem depender do Qwen, podendo consumir cota.
+
+Para Linux/macOS, consulte também [as instruções do módulo](ayla_v2/README.md).
 
 ## Exemplos de uso
 
@@ -139,50 +153,59 @@ Por isso, o caráter local do modelo não significa que todos os recursos de voz
 
 ## Testes e validação
 
-**A suíte automatizada da aplicação passou nos cenários simulados relevantes reportados durante o desenvolvimento**, incluindo fluxos de conversa, persistência, ferramentas e tratamento de falhas.
+A suíte de software passou nos **cenários simulados** registrados durante o desenvolvimento, envolvendo persistência, confirmação de alterações, ferramentas, erros e respostas de provedores fictícios. A referência técnica [`ayla_v2/VALIDACAO.md`](ayla_v2/VALIDACAO.md) é um relatório **histórico da versão 0.5.3, anterior à limpeza dos arquivos de exportação**. A contagem atual de testes pode ser diferente: execute `TESTAR_AYLA.bat` na sua instalação para obter o resultado real desta revisão.
 
-| Tipo de validação | Resultado e alcance |
+| Verificação | Situação |
 | --- | --- |
-| Suíte automatizada | Aprovada nos cenários simulados relevantes da aplicação. |
-| Integração de pesquisa | Validada estruturalmente e com respostas simuladas, incluindo tratamento de falhas do provedor. |
-| Pesquisa real | Testada manualmente pelo autor em seu ambiente local e confirmada como funcional após adicionar créditos à conta Ollama. |
-| Funcionamento geral | Recursos descritos como funcionais no ambiente local utilizado pelo autor. |
+| Testes automatizados offline com mocks | Executados em entregas anteriores; aprovados nos cenários relatados. |
+| Persistência e confirmação das listas | Cobertas por testes automatizados com dados de teste; também exercitadas manualmente durante o desenvolvimento. |
+| Pesquisa com fontes | Fluxo e tratamento de falhas testados com respostas simuladas. |
+| Pesquisa real pela conta Ollama do autor | **Não concluída:** o provedor retornou HTTP 402, solicitando créditos. |
+| Qwen real, microfone e ditado | Exigem avaliação na máquina do usuário; não existe uma nota validada de precisão geral no repositório. |
 
-Nos testes anteriores à recarga, a pesquisa recebeu HTTP `402`, acompanhado de uma mensagem do provedor solicitando créditos. Após a adição de créditos, o autor repetiu o teste real e confirmou o funcionamento da busca.
-
-Os testes simulados verificam o comportamento da aplicação; a confirmação de pesquisa real vem do teste manual do autor. São evidências distintas. O uso em outra conta continua sujeito a credenciais válidas, créditos, limites e disponibilidade do provedor.
+Os números de testes da aplicação **não são uma taxa de acerto da IA**. Links de fontes não asseguram, por si sós, que cada afirmação foi comprovada. Avalie relevância, data e consistência dos resultados antes de utilizá-los como evidência no portfólio.
 
 ## Solução de problemas
 
-| Sintoma | O que verificar |
+| Sintoma | O que fazer |
 | --- | --- |
-| Ayla não consegue usar o modelo | Confirme que o Ollama está em execução e que o modelo configurado aparece em `ollama list`. |
-| Respostas locais lentas | Verifique o tamanho do Qwen escolhido e os recursos disponíveis no computador. |
-| Pesquisa retorna HTTP `402` | Leia a mensagem do provedor e confira créditos, limites e condições da conta. No teste relatado, adicionar créditos resolveu a recusa. |
-| Chave trocada, mas a busca continua falhando | Confira se `OLLAMA_API_KEY` está sobrepondo a credencial salva e se a chave pertence ao Ollama. |
-| Falha de conexão na pesquisa | Confira a internet e a disponibilidade do serviço externo. |
-| Ditado indisponível | Confira permissão de microfone, compatibilidade do navegador e configuração do modo de ditado. |
-| Leitura em voz alta sem áudio | Confira volume, permissões de reprodução e vozes disponíveis no sistema/navegador. |
+| `ollama` não é reconhecido | Instale/inicie o Ollama e reabra o terminal. |
+| Modelo não encontrado | Execute `ollama list` e `ollama pull qwen3:4b-instruct`, ou baixe o nome definido em `AYLA_MODEL`. |
+| Falta o ambiente virtual | Execute `INSTALAR_DEPENDENCIAS_AYLA.bat` na raiz do clone. |
+| Pesquisa retorna `WEB_HTTP_402` / `Add usage credits...` | Confira os créditos/limites da conta Ollama. Não significa que a busca tenha sido feita. |
+| Falha de pesquisa sem código claro | Use `VERIFICAR_PESQUISA_AYLA.bat` e revise o código de diagnóstico, sem compartilhar a chave. |
+| Chave nova não é utilizada | Verifique se a variável `OLLAMA_API_KEY` está sobrepondo a chave salva no configurador. |
+| Ditado indisponível | Confira permissão de microfone, compatibilidade do navegador e modo local (Whisper). |
+| Leitura em voz alta sem som | Confira as vozes disponíveis e a saída de áudio do navegador/sistema. |
 
-O diagnóstico complementar `DETALHAR_ERRO_PESQUISA.bat`, quando presente na instalação, permite inspecionar a mensagem retornada pelo provedor. Revise qualquer relatório antes de compartilhá-lo e remova informações sensíveis.
+Nunca desative a validação HTTPS para contornar erros de conexão.
 
 ## Estrutura de referência
 
-```text
+~~~text
 Ayla/
 ├── README.md
-├── GIT_SETUP.md
 ├── .gitignore
 ├── INICIAR_AYLA.bat
+├── INSTALAR_DEPENDENCIAS_AYLA.bat
+├── TESTAR_AYLA.bat
 ├── CONFIGURAR_PESQUISA_WEB_AYLA.bat
+├── VERIFICAR_PESQUISA_AYLA.bat
+├── ATIVAR_DITADO_LOCAL_AYLA.bat
 ├── ayla_v2/
-│   ├── ...                         # Código da aplicação
-│   └── data/                       # Dados locais de execução
+│   ├── main.py                   # API FastAPI
+│   ├── agent.py                  # Conversa e orquestração de ferramentas
+│   ├── web_tools.py              # Busca e leitura de páginas
+│   ├── service.py / storage.py   # Ações de listas e persistência
+│   ├── static/                   # Interface web e identidade visual
+│   ├── tests/                    # Testes automatizados
+│   ├── requirements*.txt
+│   └── data/                     # Criada localmente; ignorada pelo Git
 └── docs/
-    └── ayla-home.png                # Captura da página inicial
-```
+    └── ayla-home.png            # Captura da interface
+~~~
 
-A árvore destaca os pontos de entrada e a documentação; os demais módulos e arquivos de dependências acompanham o código do projeto. Dados locais, credenciais e o ambiente virtual não devem integrar a publicação.
+As ferramentas de diagnóstico e avaliação adicionais acompanham o projeto. Arquivos de execução local, bancos, logs, configurações pessoais e modelos baixados **não fazem parte do repositório**.
 
 ## Imagem de capa do README
 
@@ -200,18 +223,19 @@ A referência já está incluída no início deste README:
 
 Use uma captura legível, preferencialmente em 1440×900 ou 1920×1080. Oculte chaves, tokens de acesso, dados pessoais e conteúdo privado de conversas ou listas. Adicione a imagem ao mesmo repositório para que o GitHub consiga exibi-la.
 
-## Preparação para o repositório público
+## Segurança e publicação
 
-O repositório **Ayla** deve conter código, dependências declaradas, testes, documentação e recursos da interface. Mantenha fora do versionamento:
+Este repositório contém a **aplicação web atual**, não o aplicativo legado Ayla Mobile. O código é público, mas o servidor FastAPI foi pensado para uso local e **não implementa autenticação multiusuário**. Não publique sua porta HTTP ou o serviço Ollama na internet.
 
-- Chaves de API, `web-secret.json`, arquivos `.env` e outras credenciais locais.
-- Bancos SQLite, conversas, listas pessoais e relatórios de diagnóstico com dados privados.
-- Ambientes virtuais, caches, logs, backups e modelos baixados.
-- O diretório `.git` e o histórico do projeto anterior, Ayla Mobile.
+O arquivo `.gitignore` impede novos arquivos não rastreados das categorias abaixo de entrarem em commits comuns:
 
-Utilize uma cópia limpa do código para iniciar o histórico público. Se uma credencial já tiver sido exposta, revogue-a no provedor; criar um histórico novo não invalida a chave antiga.
+- Chaves de API, `web-secret.json` e `.env`.
+- Banco SQLite, listas pessoais, resultados e relatórios locais.
+- `.venv`, caches, backups, logs, gravações e pesos de modelos.
 
-Os comandos para criar o histórico local e enviar os arquivos ao novo repositório vazio estão em [GIT_SETUP.md](GIT_SETUP.md).
+**Importante:** um `.gitignore` não remove informações de commits anteriores nem revoga credenciais expostas. Caso uma chave seja publicada, revogue/rotacione no provedor e trate o histórico separadamente.
+
+Leia [`ayla_v2/README.md`](ayla_v2/README.md) para detalhes da arquitetura e dos limites de ferramentas. Desenvolvimento assistido por IA; os modelos-base, APIs e dependências são projetos de terceiros.
 
 ## Contribuições
 
