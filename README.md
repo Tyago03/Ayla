@@ -1,5 +1,7 @@
 # Ayla
 
+[![Testes da Ayla](https://github.com/Tyago03/Ayla/actions/workflows/tests.yml/badge.svg)](https://github.com/Tyago03/Ayla/actions/workflows/tests.yml)
+
 **Assistente pessoal local com Qwen, ferramentas práticas e interface web.**
 
 A Ayla reúne conversa geral, listas com confirmação, calculadora, pesquisa na internet e interação por voz. O modelo Qwen roda localmente pelo Ollama; o backend utiliza FastAPI e a persistência utiliza SQLite.
@@ -152,6 +154,8 @@ O Qwen e o banco SQLite executam localmente. Depois da preparação do ambiente 
 Por isso, o caráter local do modelo não significa que todos os recursos de voz e pesquisa operem offline. Evite incluir dados sensíveis nas consultas enviadas a serviços externos.
 
 ## Testes e validação
+
+A suíte offline é executada automaticamente no **GitHub Actions com Python 3.12 e 3.13** ([ver workflow](.github/workflows/tests.yml)). O CI não precisa de chave de pesquisa nem de um modelo Ollama instalado. O resultado publicado do workflow deve ser verificado separadamente dos testes locais com IA real.
 
 A suíte de software passou nos **cenários simulados** registrados durante o desenvolvimento, envolvendo persistência, confirmação de alterações, ferramentas, erros e respostas de provedores fictícios. A referência técnica [`ayla_v2/VALIDACAO.md`](ayla_v2/VALIDACAO.md) é um relatório **histórico da versão 0.5.3, anterior à limpeza dos arquivos de exportação**. A contagem atual de testes pode ser diferente: execute `TESTAR_AYLA.bat` na sua instalação para obter o resultado real desta revisão.
 
